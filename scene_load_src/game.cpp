@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "czmq.h"
 
+#include "SDL.h"
+
 #include "OgreRoot.h"
 
 #include "../game_main.h"

@@ -27,6 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SDL.h"
 #include "SDL_opengl.h"
+
+#ifdef __APPLE__
+  #undef SDL_VIDEO_DRIVER_X11
+#endif
+
 #include "SDL_syswm.h"
 #include "SDL_thread.h"
 // bad SDL, bad.. seems to be Windows only at least

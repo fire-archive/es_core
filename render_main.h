@@ -28,8 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _RENDER_MAIN_H_
 #define _RENDER_MAIN_H_
 
-#include "SDL.h"
-
 typedef struct RenderThreadParms_s {
   Ogre::Root * root;
   SDL_Window * window;

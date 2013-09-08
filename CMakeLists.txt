@@ -9,7 +9,7 @@ find_package( OGRE REQUIRED )
 
 # FIXME: replace with a proper SDL2 cmake package, if/when there is such a thing
 # or piggyback on the sdl2 pkg-config (PKG_CONFIG_PATH and all that)
-# --cflags: -D_THREAD_SAFE -I/Users/timo/es_core/run/include/SDL 
+# --cflags: -D_THREAD_SAFE -I/Users/timo/es_core/run/include/SDL2 
 # --libs: -L/Users/timo/es_core/run/lib -lSDL2
 include_directories( "${CMAKE_INSTALL_PREFIX}/include/SDL2" )
 link_directories( "${CMAKE_INSTALL_PREFIX}/lib" )

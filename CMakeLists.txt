@@ -37,6 +37,8 @@ endif ( APPLE )
 endfunction( add_es_framework )
 
 set ( LIBZMQ libzmq-v110-mt-3_3_0 )
+set ( WINDOWS_LIBS imm32.lib winmm.lib version.lib )
+
 # BSP -----------------
 
 add_executable( bsp main.cpp game_main.cpp render_main.cpp bsp_src/game.cpp bsp_src/render.cpp ${ES_CORE_OSX_WRAP} )
@@ -49,6 +51,7 @@ set_property( TARGET bsp PROPERTY INCLUDE_DIRECTORIES ${BSP_INCLUDES} )
 target_link_libraries( bsp czmq ${LIBZMQ} )
 target_link_libraries( bsp SDL2 )
 target_link_libraries( bsp ${OGRE_LIBRARIES} )
+target_link_libraries( bsp ${WINDOWS_LIBS} )
 add_es_framework( bsp )
 
 # HEAD ----------------
@@ -60,6 +63,7 @@ set_property( TARGET head PROPERTY INCLUDE_DIRECTORIES ${HEAD_INCLUDES} )
 target_link_libraries( head czmq ${LIBZMQ} )
 target_link_libraries( head SDL2 )
 target_link_libraries( head ${OGRE_LIBRARIES} )
+target_link_libraries( head ${WINDOWS_LIBS} )
 add_es_framework( head )
 
 # SCENE ---------------
@@ -71,6 +75,7 @@ set_property( TARGET scene PROPERTY INCLUDE_DIRECTORIES ${SCENE_INCLUDES} )
 target_link_libraries( scene czmq ${LIBZMQ} )
 target_link_libraries( scene SDL2 )
 target_link_libraries( scene ${OGRE_LIBRARIES} )
+target_link_libraries( scene ${WINDOWS_LIBS} )
 add_es_framework( scene )
 
 # TEMPLATE ------------
@@ -82,6 +87,7 @@ set_property( TARGET template PROPERTY INCLUDE_DIRECTORIES ${TEMPLATE_INCLUDES} 
 target_link_libraries( template czmq ${LIBZMQ} )
 target_link_libraries( template SDL2 )
 target_link_libraries( template ${OGRE_LIBRARIES} )
+target_link_libraries( template ${WINDOWS_LIBS} )
 add_es_framework( template )
 
 # Install targets -----

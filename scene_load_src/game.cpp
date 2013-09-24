@@ -127,5 +127,5 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
 }
 
 void emit_render_state( void * socket, unsigned int time, SharedRenderState & srs ) {
-  zstr_sendf( socket, "%d %f %f %f", time, srs.position[0], srs.position[1], srs.position[2] );  
+  zstr_send( socket, "%d %f %f %f", time, srs.position[0], srs.position[1], srs.position[2] );
 }

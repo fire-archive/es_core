@@ -41,6 +41,6 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
 }
 
 void emit_render_state( void * socket, unsigned int time, SharedRenderState & rs ) {
-  zstr_sendf( socket, "%d", time );
+  zstr_send( socket, "%d", time );
 }
 

@@ -28,23 +28,18 @@ target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
 target_link_libraries( ${executable} ${WINDOWS_LIBS} )
 
 string(TOUPPER ${executable} EXECUTABLE )
-
 get_target_property( ${EXECUTABLE}_INCLUDES ${executable} INCLUDE_DIRECTORIES )
 # FIXME: fix ogre cmake so it sets this up properly instead of digging it up ourselves
 #pkg_message( BSP "BSP: ${OGRE_Plugin_BSPSceneManager_INCLUDE_DIR}" )
-list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/Plugins/BSPSceneManager" )
+include_directories(${CMAKE_SOURCE_DIR}/${executable}_src)
+include_directories(${CMAKE_INSTALL_PREFIX}/include/OGRE/Plugins/BSPSceneManager)
 list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_SOURCE_DIR}/${executable}_src" )
 
 if ( APPLE )
   list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL" )
   list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL/OSX" )
-endif ( APPLE )
-
-if ( APPLE )
   list( APPEND ${EXECUTABLE}_SOURCES OSX_wrap.mm )
-endif ( APPLE )
-# FIXME: APPLE
-if ( APPLE )
+  
   set_target_properties( ${executable} PROPERTIES MACOSX_BUNDLE TRUE )
   find_library( FOUNDATION_FRAMEWORK Foundation )
   find_library( APPKIT_FRAMEWORK AppKit )

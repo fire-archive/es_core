@@ -28,6 +28,10 @@ include_directories( "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL" )
 ENDIF( APPLE )
 
 function( add_es_framework executable)
+target_link_libraries( ${executable} czmq ${LIBZMQ} )
+target_link_libraries( ${executable} SDL2 )
+target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
+target_link_libraries( ${executable} ${WINDOWS_LIBS} )
 # FIXME: APPLE
 if ( APPLE )
   find_library( FOUNDATION_FRAMEWORK Foundation )
@@ -36,7 +40,8 @@ if ( APPLE )
 endif ( APPLE )
 endfunction( add_es_framework )
 
-set ( LIBZMQ libzmq-v110-mt-3_3_0 )
+set ( LIBZMQ libzmq)
+file(GLOB LIBZMQ ${CMAKE_INSTALL_PREFIX}/lib/libzmq-* )
 set ( WINDOWS_LIBS imm32.lib winmm.lib version.lib )
 
 # BSP -----------------
@@ -47,11 +52,7 @@ get_target_property( BSP_INCLUDES bsp INCLUDE_DIRECTORIES )
 #pkg_message( BSP "BSP: ${OGRE_Plugin_BSPSceneManager_INCLUDE_DIR}" )
 list( APPEND BSP_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/Plugins/BSPSceneManager" )
 list( APPEND BSP_INCLUDES "${CMAKE_SOURCE_DIR}/bsp_src" )
-set_property( TARGET bsp PROPERTY INCLUDE_DIRECTORIES ${BSP_INCLUDES} )
-target_link_libraries( bsp czmq ${LIBZMQ} )
-target_link_libraries( bsp SDL2 )
-target_link_libraries( bsp ${OGRE_LIBRARIES} )
-target_link_libraries( bsp ${WINDOWS_LIBS} )
+
 add_es_framework( bsp )
 
 # HEAD ----------------
@@ -60,10 +61,6 @@ add_executable( head main.cpp game_main.cpp render_main.cpp head_src/game.cpp he
 get_target_property( HEAD_INCLUDES head INCLUDE_DIRECTORIES )
 list( APPEND HEAD_INCLUDES "${CMAKE_SOURCE_DIR}/head_src" )
 set_property( TARGET head PROPERTY INCLUDE_DIRECTORIES ${HEAD_INCLUDES} )
-target_link_libraries( head czmq ${LIBZMQ} )
-target_link_libraries( head SDL2 )
-target_link_libraries( head ${OGRE_LIBRARIES} )
-target_link_libraries( head ${WINDOWS_LIBS} )
 add_es_framework( head )
 
 # SCENE ---------------
@@ -72,10 +69,6 @@ add_executable( scene main.cpp game_main.cpp render_main.cpp scene_load_src/game
 get_target_property( SCENE_INCLUDES scene INCLUDE_DIRECTORIES )
 list( APPEND SCENE_INCLUDES "${CMAKE_SOURCE_DIR}/scene_load_src" )
 set_property( TARGET scene PROPERTY INCLUDE_DIRECTORIES ${SCENE_INCLUDES} )
-target_link_libraries( scene czmq ${LIBZMQ} )
-target_link_libraries( scene SDL2 )
-target_link_libraries( scene ${OGRE_LIBRARIES} )
-target_link_libraries( scene ${WINDOWS_LIBS} )
 add_es_framework( scene )
 
 # TEMPLATE ------------
@@ -84,10 +77,6 @@ add_executable( template main.cpp game_main.cpp render_main.cpp template_src/gam
 get_target_property( TEMPLATE_INCLUDES template INCLUDE_DIRECTORIES )
 list( APPEND TEMPLATE_INCLUDES "${CMAKE_SOURCE_DIR}/template_src" )
 set_property( TARGET template PROPERTY INCLUDE_DIRECTORIES ${TEMPLATE_INCLUDES} )
-target_link_libraries( template czmq ${LIBZMQ} )
-target_link_libraries( template SDL2 )
-target_link_libraries( template ${OGRE_LIBRARIES} )
-target_link_libraries( template ${WINDOWS_LIBS} )
 add_es_framework( template )
 
 # Install targets -----

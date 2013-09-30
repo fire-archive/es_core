@@ -11,73 +11,84 @@ find_package( OGRE REQUIRED )
 # or piggyback on the sdl2 pkg-config (PKG_CONFIG_PATH and all that)
 # --cflags: -D_THREAD_SAFE -I/Users/timo/es_core/run/include/SDL2 
 # --libs: -L/Users/timo/es_core/run/lib -lSDL2
-include_directories( "${CMAKE_INSTALL_PREFIX}/include/SDL2" )
-link_directories( "${CMAKE_INSTALL_PREFIX}/lib" )
-
-include_directories( ${OGRE_INCLUDE_DIRS} )
-
-include_directories( "${CMAKE_INSTALL_PREFIX}/include" )
 
 # NOTE: under the assumption that all the es_core dependencies are getting installed to the same prefix,
 # the above has defined all the header and library directories needed for ZeroMQ
 
-IF( APPLE )
-SET( ES_CORE_OSX_WRAP OSX_wrap.mm )
-include_directories( "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL/OSX" )
-include_directories( "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL" )
-ENDIF( APPLE )
+link_directories( "${CMAKE_INSTALL_PREFIX}/lib" )
 
-function( add_es_framework executable)
+function( add_es executable)
+include_directories( "${CMAKE_INSTALL_PREFIX}/include/SDL2" )
+include_directories( ${OGRE_INCLUDE_DIRS} )
+include_directories( "${CMAKE_INSTALL_PREFIX}/include" )
+
 target_link_libraries( ${executable} czmq ${LIBZMQ} )
 target_link_libraries( ${executable} SDL2 )
 target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
 target_link_libraries( ${executable} ${WINDOWS_LIBS} )
+
+string(TOUPPER ${executable} EXECUTABLE )
+
+get_target_property( ${EXECUTABLE}_INCLUDES ${executable} INCLUDE_DIRECTORIES )
+# FIXME: fix ogre cmake so it sets this up properly instead of digging it up ourselves
+#pkg_message( BSP "BSP: ${OGRE_Plugin_BSPSceneManager_INCLUDE_DIR}" )
+list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/Plugins/BSPSceneManager" )
+list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_SOURCE_DIR}/${executable}_src" )
+
+if ( APPLE )
+  list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL" )
+  list( APPEND ${EXECUTABLE}_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/RenderSystems/GL/OSX" )
+endif ( APPLE )
+
+if ( APPLE )
+  list( APPEND ${EXECUTABLE}_SOURCES OSX_wrap.mm )
+endif ( APPLE )
 # FIXME: APPLE
 if ( APPLE )
+  set_target_properties( ${executable} PROPERTIES MACOSX_BUNDLE TRUE )
   find_library( FOUNDATION_FRAMEWORK Foundation )
   find_library( APPKIT_FRAMEWORK AppKit )
-  target_link_libraries( ${executable} ${FOUNDATION_FRAMEWORK} ${APPKIT_FRAMEWORK} )
+  find_library( IOKIT_FRAMEWORK IOKit )
+  find_library( FF_FRAMEWORK ForceFeedback )
+  target_link_libraries( ${executable} ${FOUNDATION_FRAMEWORK} ${APPKIT_FRAMEWORK} ${IOKIT_FRAMEWORK} ${FF_FRAMEWORK} )
 endif ( APPLE )
-endfunction( add_es_framework )
+endfunction( add_es )
 
-set ( LIBZMQ libzmq)
-file(GLOB LIBZMQ ${CMAKE_INSTALL_PREFIX}/lib/libzmq-* )
+set ( LIBZMQ libzmq )
+file(GLOB LIBZMQ ${CMAKE_INSTALL_PREFIX}/lib/libzmq-*)
 set ( WINDOWS_LIBS imm32.lib winmm.lib version.lib )
 
 # BSP -----------------
 
-add_executable( bsp main.cpp game_main.cpp render_main.cpp bsp_src/game.cpp bsp_src/render.cpp ${ES_CORE_OSX_WRAP} )
-get_target_property( BSP_INCLUDES bsp INCLUDE_DIRECTORIES )
-# FIXME: fix ogre cmake so it sets this up properly instead of digging it up ourselves
-#pkg_message( BSP "BSP: ${OGRE_Plugin_BSPSceneManager_INCLUDE_DIR}" )
-list( APPEND BSP_INCLUDES "${CMAKE_INSTALL_PREFIX}/include/OGRE/Plugins/BSPSceneManager" )
-list( APPEND BSP_INCLUDES "${CMAKE_SOURCE_DIR}/bsp_src" )
+list( APPEND BSP_SOURCES main.cpp game_main.cpp render_main.cpp bsp_src/game.cpp bsp_src/render.cpp )
+add_executable( bsp ${BSP_SOURCES} )
 
-add_es_framework( bsp )
+set_property( TARGET bsp PROPERTY INCLUDE_DIRECTORIES ${BSP_INCLUDES} )
+add_es( bsp )
 
 # HEAD ----------------
 
-add_executable( head main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/render.cpp ${ES_CORE_OSX_WRAP} )
-get_target_property( HEAD_INCLUDES head INCLUDE_DIRECTORIES )
-list( APPEND HEAD_INCLUDES "${CMAKE_SOURCE_DIR}/head_src" )
+list( APPEND HEAD_SOURCES main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/render.cpp )
+add_executable( head ${HEAD_SOURCES} )
+
 set_property( TARGET head PROPERTY INCLUDE_DIRECTORIES ${HEAD_INCLUDES} )
-add_es_framework( head )
+add_es( head )
 
 # SCENE ---------------
 
-add_executable( scene main.cpp game_main.cpp render_main.cpp scene_load_src/game.cpp scene_load_src/render.cpp ${ES_CORE_OSX_WRAP} )
-get_target_property( SCENE_INCLUDES scene INCLUDE_DIRECTORIES )
-list( APPEND SCENE_INCLUDES "${CMAKE_SOURCE_DIR}/scene_load_src" )
+list( APPEND SCENE_SOURCES main.cpp game_main.cpp render_main.cpp scene_load_src/game.cpp scene_load_src/render.cpp )
+add_executable( scene ${SCENE_SOURCES} )
+
 set_property( TARGET scene PROPERTY INCLUDE_DIRECTORIES ${SCENE_INCLUDES} )
-add_es_framework( scene )
+add_es( scene )
 
 # TEMPLATE ------------
 
-add_executable( template main.cpp game_main.cpp render_main.cpp template_src/game.cpp template_src/render.cpp ${ES_CORE_OSX_WRAP} )
-get_target_property( TEMPLATE_INCLUDES template INCLUDE_DIRECTORIES )
-list( APPEND TEMPLATE_INCLUDES "${CMAKE_SOURCE_DIR}/template_src" )
+list( APPEND TEMPLATE_SOURCES main.cpp game_main.cpp render_main.cpp template_src/game.cpp template_src/render.cpp )
+add_executable( template ${TEMPLATE_SOURCES} )
+
 set_property( TARGET template PROPERTY INCLUDE_DIRECTORIES ${TEMPLATE_INCLUDES} )
-add_es_framework( template )
+add_es( template )
 
 # Install targets -----
 

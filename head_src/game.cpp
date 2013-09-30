@@ -129,7 +129,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       srs.orientation = orientation;
       gs.rotation_speed = gs.smoothed_angular_velocity;
       gs.rotation = gs.smoothed_angular;
-      zstr_sendf( gsockets.zmq_render_socket, "# %s", "0" );
+      zstr_send( gsockets.zmq_render_socket, "# %s", "0" );
       // IF RENDER TICK HAPPENS HERE (before a new gamestate): render will pull the head orientation from the game state rather than input, but game state won't have the fixed orientation yet
     }
   }
@@ -172,5 +172,5 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
 }
 
 void emit_render_state( void * socket, unsigned int time, SharedRenderState & srs ) {
-  zstr_sendf( socket, "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
+  zstr_send( socket, "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
 }

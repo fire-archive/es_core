@@ -88,3 +88,17 @@ add_es( template )
 # Install targets -----
 
 install (TARGETS bsp head scene template DESTINATION bin)
+
+add_custom_command(TARGET bsp head scene template POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_INSTALL_PREFIX}/bin/$<CONFIGURATION>"
+        ${CMAKE_INSTALL_PREFIX}/bin)
+        
+add_custom_command(TARGET bsp head scene template POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove
+    ${CMAKE_INSTALL_PREFIX}/bin/plugins.cfg)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/bin/media
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/binaries/media ${CMAKE_BINARY_DIR}/bin/media)
+add_custom_target(copy_dir_target ALL
+    DEPENDS ${CMAKE_BINARY_DIR}/bin/media)

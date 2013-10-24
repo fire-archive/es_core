@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "czmq.h"
+#include "nn.hpp"
+#include <nanomsg/inproc.h>
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -227,6 +229,16 @@ int main( int argc, char *argv[] ) {
 
     void * zmq_input_rep = zsocket_new( zmq_context, ZMQ_REP );
     zsocket_bind( zmq_input_rep, "inproc://input" );
+
+	// NANOMSG
+	nn::socket nn_game_socket(AF_SP, NN_INPROC);
+	nn_game_socket.bind("inproc://control_game");
+
+    nn::socket nn_render_socket(AF_SP, NN_INPROC);
+	nn_render_socket.bind("inproc://control_render");
+
+	nn::socket nn_input_rep(AF_SP, NN_INPROC);
+	nn_input_rep.bind("inproc://input");
 
     GameThreadParms game_thread_parms;
     game_thread_parms.zmq_context = zmq_context;

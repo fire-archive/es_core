@@ -58,7 +58,6 @@ char * s_vprintf (const char *format, va_list argptr)
 /* Send C string. Returns 0 if successful, -1 if there was an failure. */
 int nstr_send (nn::socket sock, const char *format, ...)
 {
-    assert (zocket);
     assert (format);
     
     va_list argptr;

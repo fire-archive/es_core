@@ -35,7 +35,6 @@ char * s_vprintf (const char *format, va_list argptr)
     int size = 256;
     char * string = (char *) malloc (size);
     if(!string) {
-      free(string);
       return NULL;
     }
     int required = vsnprintf (string, size, format, argptr); 

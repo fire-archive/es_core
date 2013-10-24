@@ -25,6 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdint.h>
 #include "czmq.h"
 
 #include "SDL.h"
@@ -127,5 +128,5 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
 }
 
 void emit_render_state( void * socket, unsigned int time, SharedRenderState & srs ) {
-  zstr_sendf( socket, "%d %f %f %f", time, srs.position[0], srs.position[1], srs.position[2] );  
+  zstr_send( socket, "%d %f %f %f", time, srs.position[0], srs.position[1], srs.position[2] );
 }

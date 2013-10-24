@@ -112,11 +112,11 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       gs.mouse_pressed = true;
       // changing the control scheme: the player is now driving the orientation of the head directly with the mouse
       // tell the input logic to reset the orientation to match the current orientation of the head
-      zstr_sendf( gsockets.zmq_input_req, "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
+      zstr_send( gsockets.zmq_input_req, "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
       zstr_recv( gsockets.zmq_input_req ); // wait for ack from input
       // IF RENDER TICK HAPPENS HERE: render will not know that it should grab the orientation directly from the mouse,
       // but the orientation coming from game should still be ok?
-      zstr_sendf( gsockets.zmq_render_socket, "# %s", "1" );
+      zstr_send( gsockets.zmq_render_socket, "# %s", "1" );
       // IF RENDER TICK HAPPENS HERE (before a new gamestate):
       // the now reset input orientation will combine with the old game state, that's bad
     }
@@ -129,7 +129,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       srs.orientation = orientation;
       gs.rotation_speed = gs.smoothed_angular_velocity;
       gs.rotation = gs.smoothed_angular;
-      zstr_sendf( gsockets.zmq_render_socket, "# %s", "0" );
+      zstr_send( gsockets.zmq_render_socket, "# %s", "0" );
       // IF RENDER TICK HAPPENS HERE (before a new gamestate): render will pull the head orientation from the game state rather than input, but game state won't have the fixed orientation yet
     }
   }
@@ -172,5 +172,5 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
 }
 
 void emit_render_state( void * socket, unsigned int time, SharedRenderState & srs ) {
-  zstr_sendf( socket, "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
+  zstr_send( socket, "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
 }

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OgreOSXCocoaWindow.h"
 
 #include "SDL.h"
+#undef SDL_VIDEO_DRIVER_X11
 #include "SDL_syswm.h"
 
 #include "OSX_wrap.h"

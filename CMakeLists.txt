@@ -23,6 +23,7 @@ include_directories( ${OGRE_INCLUDE_DIRS} )
 include_directories( "${CMAKE_INSTALL_PREFIX}/include" )
 
 target_link_libraries( ${executable} czmq ${LIBZMQ} )
+target_link_libraries( ${executable} nanomsg )
 target_link_libraries( ${executable} SDL2 )
 target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
 target_link_libraries( ${executable} ${WINDOWS_LIBS} )

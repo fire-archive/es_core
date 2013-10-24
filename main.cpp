@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "czmq.h"
-#include "nn.hpp"
+#include "../nn.hpp"
 #include <nanomsg/inproc.h>
 
 #include "SDL.h"

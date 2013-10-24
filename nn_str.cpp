@@ -33,12 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 char * s_vprintf (const char *format, va_list argptr)
 {
     int size = 256;
-	char * temp = (char *) malloc (size);
-	if(!temp) {
-	  free(temp);
-	  return NULL;
-	}
-	char *string = temp; 
+    char * temp = (char *) malloc (size);
+    if(!temp) {
+      free(temp);
+      return NULL;
+    }
+    char *string = temp; 
     int required = vsnprintf (string, size, format, argptr); 
 #if defined (__WINDOWS__)
     if (required < 0 || required >= size)

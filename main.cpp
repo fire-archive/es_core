@@ -142,12 +142,12 @@ int main( int argc, char *argv[] ) {
 
   SDL_Init( SDL_INIT_EVERYTHING );
   SDL_Window * window = SDL_CreateWindow(
-					 "es_core::SDL",
-					 SDL_WINDOWPOS_UNDEFINED,
-					 SDL_WINDOWPOS_UNDEFINED,
-					 800,
-					 600,
-					 SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN/*|SDL_WINDOW_RESIZABLE*/ );
+                     "es_core::SDL",
+                     SDL_WINDOWPOS_UNDEFINED,
+                     SDL_WINDOWPOS_UNDEFINED,
+                     800,
+                     600,
+                     SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN/*|SDL_WINDOW_RESIZABLE*/ );
   if ( window == NULL ) {
     printf( "SDL_CreateWindow failed: %s\n", SDL_GetError() );
     return -1;
@@ -230,15 +230,15 @@ int main( int argc, char *argv[] ) {
     void * zmq_input_rep = zsocket_new( zmq_context, ZMQ_REP );
     zsocket_bind( zmq_input_rep, "inproc://input" );
 
-	// NANOMSG
-	nn::socket nn_game_socket(AF_SP, NN_INPROC);
-	nn_game_socket.bind("inproc://control_game");
+    // NANOMSG
+    nn::socket nn_game_socket(AF_SP, NN_INPROC);
+    nn_game_socket.bind("inproc://control_game");
 
     nn::socket nn_render_socket(AF_SP, NN_INPROC);
-	nn_render_socket.bind("inproc://control_render");
+    nn_render_socket.bind("inproc://control_render");
 
-	nn::socket nn_input_rep(AF_SP, NN_INPROC);
-	nn_input_rep.bind("inproc://input");
+    nn::socket nn_input_rep(AF_SP, NN_INPROC);
+    nn_input_rep.bind("inproc://input");
 
     GameThreadParms game_thread_parms;
     game_thread_parms.zmq_context = zmq_context;
@@ -281,78 +281,78 @@ int main( int argc, char *argv[] ) {
       //   plus it throws some latency into the calling thread
       SDL_Event event;
       while ( SDL_PollEvent( &event ) ) {
-	if ( event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ) {
-	  printf( "SDL_KeyboardEvent\n" );
-	  if ( event.type == SDL_KEYUP && ((SDL_KeyboardEvent*)&event)->keysym.scancode == SDL_SCANCODE_ESCAPE ) {
-	    send_shutdown( zmq_render_socket, zmq_game_socket );
-	    shutdown_requested = true;	    
-	  }
-	} else if ( event.type == SDL_MOUSEMOTION ) {
-	  SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
-	  // + when manipulating an object, - when doing a first person view .. needs to be configurable?
-	  is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
-	  if ( is.yaw >= 0.0f ) {
-	    is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
-	  } else {
-	    is.yaw = fmod( is.yaw - 180.0f, 360.0f ) + 180.0f;
-	  }
-	  // + when manipulating an object, - when doing a first person view .. needs to be configurable?
-	  is.pitch += is.orientation_factor * is.pitch_sens * (float)mev->yrel;
-	  if ( is.pitch > 90.0f ) {
-	    is.pitch = 90.0f;
-	  } else if ( is.pitch < -90.0f ) {
-	    is.pitch = -90.0f;
-	  }
-	  // build a quaternion of the current orientation
-	  Ogre::Matrix3 r;
-	  r.FromEulerAnglesYXZ( Ogre::Radian( Ogre::Degree( is.yaw ) ), Ogre::Radian( Ogre::Degree( is.pitch ) ), Ogre::Radian( Ogre::Degree( is.roll ) ) );
-	  is.orientation.FromRotationMatrix( r );
-	} else if ( event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN ) {
-	  printf( "SDL_MouseButtonEvent\n" );
-	} else if ( event.type == SDL_QUIT ) {
-	  printf( "SDL_Quit\n" );
-	  // push a shutdown on the control socket, game and render will pick it up later
-	  // NOTE: if the req/rep patterns change we may still have to deal with hangs here
-	  send_shutdown( zmq_render_socket, zmq_game_socket );
-	  shutdown_requested = true;
-	} else {
-	  printf( "SDL_Event %d\n", event.type );
-	}
+    if ( event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ) {
+      printf( "SDL_KeyboardEvent\n" );
+      if ( event.type == SDL_KEYUP && ((SDL_KeyboardEvent*)&event)->keysym.scancode == SDL_SCANCODE_ESCAPE ) {
+        send_shutdown( zmq_render_socket, zmq_game_socket );
+        shutdown_requested = true;	    
+      }
+    } else if ( event.type == SDL_MOUSEMOTION ) {
+      SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
+      // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+      is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
+      if ( is.yaw >= 0.0f ) {
+        is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
+      } else {
+        is.yaw = fmod( is.yaw - 180.0f, 360.0f ) + 180.0f;
+      }
+      // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+      is.pitch += is.orientation_factor * is.pitch_sens * (float)mev->yrel;
+      if ( is.pitch > 90.0f ) {
+        is.pitch = 90.0f;
+      } else if ( is.pitch < -90.0f ) {
+        is.pitch = -90.0f;
+      }
+      // build a quaternion of the current orientation
+      Ogre::Matrix3 r;
+      r.FromEulerAnglesYXZ( Ogre::Radian( Ogre::Degree( is.yaw ) ), Ogre::Radian( Ogre::Degree( is.pitch ) ), Ogre::Radian( Ogre::Degree( is.roll ) ) );
+      is.orientation.FromRotationMatrix( r );
+    } else if ( event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN ) {
+      printf( "SDL_MouseButtonEvent\n" );
+    } else if ( event.type == SDL_QUIT ) {
+      printf( "SDL_Quit\n" );
+      // push a shutdown on the control socket, game and render will pick it up later
+      // NOTE: if the req/rep patterns change we may still have to deal with hangs here
+      send_shutdown( zmq_render_socket, zmq_game_socket );
+      shutdown_requested = true;
+    } else {
+      printf( "SDL_Event %d\n", event.type );
+    }
       }
       // we are ready to process the request now
       if ( strcmp( input_request, "mouse_state" ) == 0 ) {
-	int x, y;
-	Uint8 buttons = SDL_GetMouseState( &x, &y );
-	zstr_send( zmq_input_rep, "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+    int x, y;
+    Uint8 buttons = SDL_GetMouseState( &x, &y );
+    zstr_send( zmq_input_rep, "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
       } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
-	// looking at a few hardcoded keys for now
-	// NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
-	const Uint8 *state = SDL_GetKeyboardState(NULL);
-	zstr_send( zmq_input_rep, "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+    // looking at a few hardcoded keys for now
+    // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    zstr_send( zmq_input_rep, "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
       } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
-	// reset the orientation
-	parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
+    // reset the orientation
+    parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
 
-	Ogre::Matrix3 r;
-	is.orientation.ToRotationMatrix( r );
-	Ogre::Radian rfYAngle, rfPAngle, rfRAngle;
-	r.ToEulerAnglesYXZ( rfYAngle, rfPAngle, rfRAngle );
-	is.yaw = rfYAngle.valueDegrees();
-	is.pitch = rfPAngle.valueDegrees();
-	is.roll = rfRAngle.valueDegrees();
+    Ogre::Matrix3 r;
+    is.orientation.ToRotationMatrix( r );
+    Ogre::Radian rfYAngle, rfPAngle, rfRAngle;
+    r.ToEulerAnglesYXZ( rfYAngle, rfPAngle, rfRAngle );
+    is.yaw = rfYAngle.valueDegrees();
+    is.pitch = rfPAngle.valueDegrees();
+    is.roll = rfRAngle.valueDegrees();
 
-	zstr_send( zmq_input_rep, "" ); // nop (acknowledge)
+    zstr_send( zmq_input_rep, "" ); // nop (acknowledge)
       } else if ( strncmp( input_request, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
-	if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
-	  printf( "input configuration: manipulate object\n" );
-	  is.orientation_factor = 1.0f;
-	} else {
-	  printf( "input configuration: look around\n" );
-	  is.orientation_factor = -1.0f;
-	}
-	zstr_send( zmq_input_rep, "" ); // nop
+    if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
+      printf( "input configuration: manipulate object\n" );
+      is.orientation_factor = 1.0f;
+    } else {
+      printf( "input configuration: look around\n" );
+      is.orientation_factor = -1.0f;
+    }
+    zstr_send( zmq_input_rep, "" ); // nop
       } else {
-	zstr_send( zmq_input_rep, "" ); // nop
+    zstr_send( zmq_input_rep, "" ); // nop
       }
       free( input_request );
     }

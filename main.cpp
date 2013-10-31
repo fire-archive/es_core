@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "czmq.h"
 #include "../nn.hpp"
 #include <nanomsg/inproc.h>
+#include <nanomsg/pair.h>
+#include <nanomsg/reqrep.h>
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -245,13 +247,13 @@ int main( int argc, char *argv[] ) {
     zsocket_bind( zmq_input_rep, "inproc://input" );
 #endif
 #ifdef NANOMSG_BRANCH
-    nn::socket nn_game_socket(AF_SP, NN_INPROC);
+    nn::socket nn_game_socket(AF_SP, NN_PAIR);
     nn_game_socket.bind("inproc://control_game");
 
-    nn::socket nn_render_socket(AF_SP, NN_INPROC);
+    nn::socket nn_render_socket(AF_SP, NN_PAIR);
     nn_render_socket.bind("inproc://control_render");
 
-    nn::socket nn_input_rep(AF_SP, NN_INPROC);
+    nn::socket nn_input_rep(AF_SP, NN_REP);
     nn_input_rep.bind("inproc://input");
 #endif
     GameThreadParms game_thread_parms;

@@ -54,6 +54,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "render_main.h"
 #include "game_main.h"
 
+#define NANOMSG_BRANCH
+#define ZEROMQ_BRANCH 
+
 typedef struct InputState_s {
   float yaw_sens;
   float pitch_sens;
@@ -80,10 +83,19 @@ void parse_orientation( char * start, Ogre::Quaternion & orientation ) {
   orientation.z = (float)atof( start );
 }
 
+#ifdef ZEROMQ_BRANCH 
 void send_shutdown( void * zmq_render_socket, void * zmq_game_socket ) {
   zstr_send( zmq_render_socket, "stop" );
   zstr_send( zmq_game_socket, "stop" );
 }
+#endif
+
+#ifdef NANOMSG_BRANCH
+void send_shutdown( nn::socket nn_render_socket, nn::socket nn_game_socket ) {
+	nn_render_socket.sendnstr_send( , "stop" );
+  nstr_send( nn_game_socket, "stop" );
+}
+#endif
 
 void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, void * zmq_input_rep ) {
   // there is no timeout support in SDL_WaitThread, so we can only call it once we're sure the thread is going to finish
@@ -94,8 +106,10 @@ void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_th
   // for now, loop the input thread for a bit to flush out any events
   Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
   while ( SDL_GetTicks() < continue_time ) {
+#ifdef ZEROMQ_BRANCH 
     char * req = zstr_recv_nowait( zmq_input_rep );
-    if ( req != NULL ) {
+#endif
+	if ( req != NULL ) {
       delete( req );
       // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
       // which isn't the case, so the parsing code might crash .. still better than a hang
@@ -218,7 +232,7 @@ int main( int argc, char *argv[] ) {
 
     // NOTE: since we are driving with SDL, we need to keep the Ogre side updated for window visibility
     ogre_render_window->setVisible( true );
-
+#ifdef ZEROMQ_BRANCH 
     zctx_t * zmq_context = zctx_new();
 
     void * zmq_game_socket = zsocket_new( zmq_context, ZMQ_PAIR );
@@ -229,8 +243,8 @@ int main( int argc, char *argv[] ) {
 
     void * zmq_input_rep = zsocket_new( zmq_context, ZMQ_REP );
     zsocket_bind( zmq_input_rep, "inproc://input" );
-
-    // NANOMSG
+#endif
+#ifdef NANOMSG_BRANCH
     nn::socket nn_game_socket(AF_SP, NN_INPROC);
     nn_game_socket.bind("inproc://control_game");
 
@@ -239,7 +253,7 @@ int main( int argc, char *argv[] ) {
 
     nn::socket nn_input_rep(AF_SP, NN_INPROC);
     nn_input_rep.bind("inproc://input");
-
+#endif
     GameThreadParms game_thread_parms;
     game_thread_parms.zmq_context = zmq_context;
     SDL_Thread * sdl_game_thread = SDL_CreateThread( game_thread, "game", &game_thread_parms );
@@ -274,7 +288,9 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
     while ( !shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */ ) {
       // we wait here
+#ifdef ZEROMQ_BRANCH
       char * input_request = zstr_recv( zmq_input_rep );
+#endif
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state
       // TODO: done this way does not meet the objectives of smooth, frame independent mouse view control,

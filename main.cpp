@@ -94,8 +94,8 @@ void send_shutdown( void * zmq_render_socket, void * zmq_game_socket ) {
 
 #ifdef NANOMSG_BRANCH
 void send_shutdown( nn::socket nn_render_socket, nn::socket nn_game_socket ) {
-	nn_render_socket.sendnstr_send( , "stop" );
-  nstr_send( nn_game_socket, "stop" );
+  nn_render_socket.nstr_send( "stop" );
+  nn_game_socket.nstr_send( "stop" );
 }
 #endif
 

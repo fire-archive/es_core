@@ -224,6 +224,7 @@ namespace nn
 
 			int rc = this->send(string, NN_MSG, 0); 
 			assert (rc == sz_msg);
+			free (string);
 			return rc;
 		}
 

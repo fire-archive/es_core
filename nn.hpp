@@ -23,7 +23,7 @@
 #ifndef NN_HPP_INCLUDED
 #define NN_HPP_INCLUDED
 
-#include <nanomsg/nn.h>
+#include "nanomsg/nn.h"
 
 #include <cassert>
 #include <cstring>
@@ -222,7 +222,7 @@ namespace nn
 			char *string = s_vprintf (format, argptr);
 			va_end (argptr);
 
-			int rc = this->send(string, NN_MSG, 0); 
+			int rc = send(string, NN_MSG, 0); 
 			assert (rc == sz_msg);
 			free (string);
 			return rc;
@@ -233,7 +233,7 @@ namespace nn
 		inline char * nstr_recv ()
 		{
 			void *buf = NULL;
-			const int nbytes = this->recv(&buf, NN_MSG, 0);
+			const int nbytes = recv(&buf, NN_MSG, 0);
 			assert (nbytes >= 0);
 			char *string = (char *) malloc (nbytes + 1);
 			memcpy (string, &buf, nbytes);

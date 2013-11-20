@@ -25,7 +25,7 @@ include_directories( ${OGRE_INCLUDE_DIRS} )
 include_directories( "${CMAKE_INSTALL_PREFIX}/include" )
 
 target_link_libraries( ${executable} czmq ${LIBZMQ} )
-target_link_libraries( ${executable} nanomsg )
+target_link_libraries( ${executable} "nanomsg" )
 target_link_libraries( ${executable} SDL2 )
 target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
 target_link_libraries( ${executable} ${WINDOWS_LIBS} )
@@ -58,7 +58,7 @@ set ( WINDOWS_LIBS imm32.lib winmm.lib version.lib )
 
 # BSP -----------------
 
-list( APPEND BSP_SOURCES nn.hpp nn_str.cpp main.cpp game_main.cpp render_main.cpp bsp_src/game.cpp bsp_src/render.cpp )
+list( APPEND BSP_SOURCES nn.hpp main.cpp game_main.cpp render_main.cpp bsp_src/game.cpp bsp_src/render.cpp )
 add_executable( bsp ${BSP_SOURCES} )
 
 set_property( TARGET bsp PROPERTY INCLUDE_DIRECTORIES ${BSP_INCLUDES} )
@@ -66,7 +66,7 @@ add_es( bsp )
 
 # HEAD ----------------
 
-list( APPEND HEAD_SOURCES nn.hpp nn_str.cpp main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/render.cpp )
+list( APPEND HEAD_SOURCES nn.hpp main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/render.cpp )
 add_executable( head ${HEAD_SOURCES} )
 
 set_property( TARGET head PROPERTY INCLUDE_DIRECTORIES ${HEAD_INCLUDES} )
@@ -74,7 +74,7 @@ add_es( head )
 
 # SCENE ---------------
 
-list( APPEND SCENE_SOURCES nn.hpp nn_str.cpp main.cpp game_main.cpp render_main.cpp scene_load_src/game.cpp scene_load_src/render.cpp )
+list( APPEND SCENE_SOURCES nn.hpp main.cpp game_main.cpp render_main.cpp scene_load_src/game.cpp scene_load_src/render.cpp )
 add_executable( scene ${SCENE_SOURCES} )
 
 set_property( TARGET scene PROPERTY INCLUDE_DIRECTORIES ${SCENE_INCLUDES} )
@@ -82,7 +82,7 @@ add_es( scene )
 
 # TEMPLATE ------------
 
-list( APPEND TEMPLATE_SOURCES nn.hpp nn_str.cpp main.cpp game_main.cpp render_main.cpp template_src/game.cpp template_src/render.cpp )
+list( APPEND TEMPLATE_SOURCES nn.hpp main.cpp game_main.cpp render_main.cpp template_src/game.cpp template_src/render.cpp )
 add_executable( template ${TEMPLATE_SOURCES} )
 
 set_property( TARGET template PROPERTY INCLUDE_DIRECTORIES ${TEMPLATE_INCLUDES} )

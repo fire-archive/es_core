@@ -3,7 +3,7 @@ cmake_policy( SET CMP0007 NEW ) # this one it actually complained
 
 # NOTE: we assume that CMAKE_INSTALL_PREFIX is provided, and that all the dependencies are installed there already
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_INSTALL_PREFIX}/CMake")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_BINARY_DIR}/Run/CMake")
 
 project( es_core )
 

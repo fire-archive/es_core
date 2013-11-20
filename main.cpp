@@ -25,6 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#define NANOMSG_BRANCH
+// #define ZEROMQ_BRANCH 
+
 #include "czmq.h"
 
 #include "nn.hpp"
@@ -57,9 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "render_main.h"
 #include "game_main.h"
-
-#define NANOMSG_BRANCH
-// #define ZEROMQ_BRANCH 
 
 typedef struct InputState_s {
   float yaw_sens;

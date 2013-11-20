@@ -26,10 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "czmq.h"
-#include "../nn.hpp"
-#include <nanomsg/inproc.h>
-#include <nanomsg/pair.h>
-#include <nanomsg/reqrep.h>
+
+#include "nn.hpp"
+#include "nanomsg/inproc.h"
+#include "nanomsg/inproc.h"
+#include "nanomsg/pair.h"
+#include "nanomsg/reqrep.h"
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -57,13 +59,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "game_main.h"
 
 #define NANOMSG_BRANCH
-#define ZEROMQ_BRANCH 
+// #define ZEROMQ_BRANCH 
 
 typedef struct InputState_s {
   float yaw_sens;
   float pitch_sens;
   float orientation_factor;	// +1/-1 easy switch between look around and manipulate something
-  float yaw;			// degrees, modulo ]-180,180] range
+  float yaw;			// degrees, modulo [-180,180] range
   float pitch;			// degrees, clamped [-90,90] range
   float roll;
   Ogre::Quaternion orientation;	// current orientation  
@@ -93,13 +95,19 @@ void send_shutdown( void * zmq_render_socket, void * zmq_game_socket ) {
 #endif
 
 #ifdef NANOMSG_BRANCH
-void send_shutdown( nn::socket nn_render_socket, nn::socket nn_game_socket ) {
-  nn_render_socket.nstr_send( "stop" );
-  nn_game_socket.nstr_send( "stop" );
+void send_shutdown( nn::socket * nn_render_socket, nn::socket * nn_game_socket ) {
+  nn_render_socket->nstr_send( "stop" );
+  nn_game_socket->nstr_send( "stop" );
 }
 #endif
 
-void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, void * zmq_input_rep ) {
+void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, 
+#ifdef ZEROMQ_BRANCH
+                   void * zmq_input_rep ) {
+#endif
+#ifdef NANOMSG_BRANCH
+                   nn::socket * nn_input_rep ) {
+#endif
   // there is no timeout support in SDL_WaitThread, so we can only call it once we're sure the thread is going to finish
   // the threads may do a few polls against the input thread before actually shutting down
   // TODO: I'd like to come up with a more robust design:
@@ -111,11 +119,19 @@ void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_th
 #ifdef ZEROMQ_BRANCH 
     char * req = zstr_recv_nowait( zmq_input_rep );
 #endif
+#ifdef NANOMSG_BRANCH
+	char * req = nn_input_rep->nstr_recv();
+#endif
 	if ( req != NULL ) {
       delete( req );
       // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
       // which isn't the case, so the parsing code might crash .. still better than a hang
+#ifdef ZEROMQ_BRANCH      
       zstr_send( zmq_input_rep, "" );
+#endif
+#ifdef NANOMSG_BRANCH
+      nn_input_rep->nstr_send( "" );
+#endif
     } else {
       SDL_Delay( 10 );
     }
@@ -257,7 +273,9 @@ int main( int argc, char *argv[] ) {
     nn_input_rep.bind("inproc://input");
 #endif
     GameThreadParms game_thread_parms;
+#ifdef ZEROMQ_BRANCH
     game_thread_parms.zmq_context = zmq_context;
+#endif
     SDL_Thread * sdl_game_thread = SDL_CreateThread( game_thread, "game", &game_thread_parms );
 
     RenderThreadParms render_thread_parms;
@@ -265,7 +283,9 @@ int main( int argc, char *argv[] ) {
     render_thread_parms.window = window;
     render_thread_parms.gl_context = glcontext;
     render_thread_parms.ogre_window = ogre_render_window;
+#ifdef ZEROMQ_BRANCH
     render_thread_parms.zmq_context = zmq_context;
+#endif
     render_thread_parms.argc = argc;
     render_thread_parms.argv = argv;
 #ifdef __APPLE__
@@ -293,6 +313,9 @@ int main( int argc, char *argv[] ) {
 #ifdef ZEROMQ_BRANCH
       char * input_request = zstr_recv( zmq_input_rep );
 #endif
+#ifdef NANOMSG_BRANCH
+	  char * input_request = nn_input_rep.nstr_recv();
+#endif
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state
       // TODO: done this way does not meet the objectives of smooth, frame independent mouse view control,
@@ -302,7 +325,12 @@ int main( int argc, char *argv[] ) {
     if ( event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ) {
       printf( "SDL_KeyboardEvent\n" );
       if ( event.type == SDL_KEYUP && ((SDL_KeyboardEvent*)&event)->keysym.scancode == SDL_SCANCODE_ESCAPE ) {
+#ifdef ZEROMQ_BRANCH
         send_shutdown( zmq_render_socket, zmq_game_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+        send_shutdown( &nn_render_socket, &nn_game_socket );
+#endif
         shutdown_requested = true;	    
       }
     } else if ( event.type == SDL_MOUSEMOTION ) {
@@ -331,7 +359,12 @@ int main( int argc, char *argv[] ) {
       printf( "SDL_Quit\n" );
       // push a shutdown on the control socket, game and render will pick it up later
       // NOTE: if the req/rep patterns change we may still have to deal with hangs here
+#ifdef ZEROMQ_BRANCH
       send_shutdown( zmq_render_socket, zmq_game_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+      send_shutdown( &nn_render_socket, &nn_game_socket );
+#endif
       shutdown_requested = true;
     } else {
       printf( "SDL_Event %d\n", event.type );
@@ -341,12 +374,22 @@ int main( int argc, char *argv[] ) {
       if ( strcmp( input_request, "mouse_state" ) == 0 ) {
     int x, y;
     Uint8 buttons = SDL_GetMouseState( &x, &y );
+#ifdef ZEROMQ_BRANCH   
     zstr_send( zmq_input_rep, "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+#endif
+#ifdef NANOMSG_BRANCH
+    nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+#endif
       } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
     // looking at a few hardcoded keys for now
     // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
     const Uint8 *state = SDL_GetKeyboardState(NULL);
+#ifdef ZEROMQ_BRANCH
     zstr_send( zmq_input_rep, "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+#endif
+#ifdef NANOMSG_BRANCH
+    nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+#endif
       } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
     // reset the orientation
     parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
@@ -358,8 +401,12 @@ int main( int argc, char *argv[] ) {
     is.yaw = rfYAngle.valueDegrees();
     is.pitch = rfPAngle.valueDegrees();
     is.roll = rfRAngle.valueDegrees();
-
+#ifdef ZEROMQ_BRANCH 
     zstr_send( zmq_input_rep, "" ); // nop (acknowledge)
+#endif
+#ifdef NANOMSG_BRANCH
+    nn_input_rep.nstr_send( "" ); // nop (acknowledge)
+#endif
       } else if ( strncmp( input_request, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
     if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
       printf( "input configuration: manipulate object\n" );
@@ -368,20 +415,40 @@ int main( int argc, char *argv[] ) {
       printf( "input configuration: look around\n" );
       is.orientation_factor = -1.0f;
     }
+#ifdef ZEROMQ_BRANCH 
     zstr_send( zmq_input_rep, "" ); // nop
+#endif
+#ifdef NANOMSG_BRANCH
+    nn_input_rep.nstr_send( "" ); // nop
+#endif
       } else {
+#ifdef ZEROMQ_BRANCH 
     zstr_send( zmq_input_rep, "" ); // nop
+#endif
+#ifdef NANOMSG_BRANCH
+    nn_input_rep.nstr_send( "" ); //nop
+#endif
       }
       free( input_request );
     }
 
     if ( !shutdown_requested ) {
+#ifdef ZEROMQ_BRANCH
       send_shutdown( zmq_render_socket, zmq_game_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+      send_shutdown( &nn_render_socket, &nn_game_socket);
+#endif
       shutdown_requested = true;
     }
+#ifdef ZEROMQ_BRANCH
     wait_shutdown( sdl_render_thread, sdl_game_thread, zmq_input_rep );
 
     zctx_destroy( &zmq_context );
+#endif
+#ifdef NANOMSG_BRANCH
+    wait_shutdown( sdl_render_thread, sdl_game_thread, &nn_input_rep);
+#endif
     // make the GL context again before proceeding with the teardown
 #ifdef __APPLE__
     OSX_GL_set_current( ogre_render_window );

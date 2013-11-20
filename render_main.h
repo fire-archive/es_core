@@ -39,7 +39,12 @@ typedef struct RenderThreadParms_s {
 } RenderThreadParms;
 
 typedef struct RenderThreadSockets_s {
+#ifdef ZEROMQ_BRANCH
   void * zmq_input_req;
+#endif
+#ifdef NANOMSG_BRANCH
+  nn::socket * nn_input_req;
+#endif
 } RenderThreadSockets;
 
 int render_thread( void * );

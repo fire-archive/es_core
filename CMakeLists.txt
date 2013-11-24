@@ -111,3 +111,5 @@ add_custom_command(TARGET bsp head scene template POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
      ${CMAKE_SOURCE_DIR}/binaries/media
      ${CMAKE_INSTALL_PREFIX}/bin/media)
+
+set_target_properties(bsp scene template PROPERTIES EXCLUDE_FROM_ALL 1)

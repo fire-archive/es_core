@@ -92,7 +92,7 @@ add_es( template )
 
 # Install targets -----
 
-install (TARGETS head DESTINATION bin )
+install (TARGETS bsp head scene template DESTINATION bin)
 
 add_custom_command(TARGET bsp head scene template POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

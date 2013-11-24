@@ -192,7 +192,7 @@ namespace nn
 			  return NULL;
 			}
 			int required = vsnprintf (string, size, format, argptr); 
-		#if defined (__WINDOWS__)
+		#if defined _MSC_VER
 			if (required < 0 || required >= size)
 				required = _vscprintf (format, argptr);
 		#endif

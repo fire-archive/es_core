@@ -26,6 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "czmq.h"
+#include "nn.hpp"
+#include "nanomsg/pair.h"
+#include "nanomsg/reqrep.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -56,6 +59,7 @@ int render_thread( void * _parms ) {
   RenderThreadParms * parms = (RenderThreadParms*)_parms;
   RenderThreadSockets rsockets;
 
+#ifdef ZEROMQ_BRANCH
   void * zmq_control_socket = zsocket_new( parms->zmq_context, ZMQ_PAIR );
   {
     int ret = zsocket_connect( zmq_control_socket, "inproc://control_render" );
@@ -76,7 +80,30 @@ int render_thread( void * _parms ) {
     int ret = zsocket_connect( rsockets.zmq_input_req, "inproc://input" );
     assert( ret == 0 );
   }
+#endif
+#ifdef NANOMSG_BRANCH
+  nn::socket nn_control_socket( AF_SP, NN_PAIR );
+  {
+    int ret = nn_control_socket.connect( "inproc://control_render" );
+    assert( ret == 0 );
+  }
 
+  nn::socket nn_game_socket( AF_SP, NN_PAIR );
+  {
+    int ret = nn_game_socket.connect( "inproc://game_render" );
+    // NOTE: since both render thread and game thread get spun at the same time,
+    // and the connect needs to happen after the bind,
+    // it's possible this would fail on occasion? just loop a few times and retry?
+    assert ( ret == 0 );
+  }
+
+  nn::socket nn_input_req( AF_SP, NN_REQ );
+  rsockets.nn_input_req = &nn_input_req;
+  {
+    int ret = rsockets.nn_input_req->connect( "inproc://input" );
+    assert ( ret == 0 );
+  }
+#endif
 #ifdef __APPLE__
   OSX_GL_set_current( parms->ogre_window );
 #else
@@ -95,7 +122,12 @@ int render_thread( void * _parms ) {
   render_init( parms, rs, srs[0] );
 
   while ( true ) {
+#ifdef ZEROMQ_BRANCH
     char * cmd = zstr_recv_nowait( zmq_control_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+    char * cmd = nn_control_socket.nstr_recv();
+#endif
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );
       free( cmd );
@@ -103,7 +135,12 @@ int render_thread( void * _parms ) {
     }
     while ( true ) {
       // any message from the game thread?
+#ifdef ZEROMQ_BRANCH
       char * game_tick = zstr_recv_nowait( zmq_game_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+      char * game_tick = nn_game_socket.nstr_recv();
+#endif
       if ( game_tick == NULL ) {
 	break;
       }

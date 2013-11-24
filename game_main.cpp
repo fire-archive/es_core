@@ -29,6 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <time.h>
 #include <math.h>
 
+#include "nn.hpp"
+#include "nanomsg/pair.h"
+#include "nanomsg/reqrep.h"
 #include "czmq.h"
 
 #include "SDL.h"
@@ -52,6 +55,7 @@ int game_thread( void * _parms ) {
   GameState gs;
   SharedRenderState srs;
 
+#ifdef ZEROMQ_BRANCH
   gsockets.zmq_control_socket = zsocket_new( parms->zmq_context, ZMQ_PAIR );
   {
     int ret = zsocket_connect( gsockets.zmq_control_socket, "inproc://control_game" );
@@ -66,6 +70,26 @@ int game_thread( void * _parms ) {
     int ret = zsocket_connect( gsockets.zmq_input_req, "inproc://input" );
     assert( ret == 0 );
   }
+#endif
+#ifdef NANOMSG_BRANCH
+  nn::socket nn_control_socket( AF_SP, NN_PAIR );
+  gsockets.nn_control_socket = &nn_control_socket;
+  {
+    int ret = gsockets.nn_control_socket->connect( "inproc://control_game" );
+    assert( ret == 0 );
+  }
+
+  nn::socket nn_render_socket( AF_SP, NN_PAIR );
+  gsockets.nn_render_socket = &nn_render_socket;
+  gsockets.nn_render_socket->connect( "inproc://game_render" );
+
+  nn::socket nn_input_req( AF_SP, NN_REQ );  
+  gsockets.nn_input_req = &nn_input_req;
+  {
+    int ret = gsockets.nn_input_req->connect( "inproc://input" );
+    assert ( ret == 0) ;
+  }
+#endif
 
   game_init( gsockets, gs, srs );
 
@@ -82,14 +106,24 @@ int game_thread( void * _parms ) {
       game_tick( gsockets, gs, srs, now );
       // notify the render thread that a new game state is ready.
       // on the next render frame, it will start interpolating between the previous state and this new one
+#ifdef ZEROMQ_BRANCH
       emit_render_state( gsockets.zmq_render_socket, baseline + framenum * GAME_DELAY, srs );
+#endif
+#ifdef NANOMSG_BRANCH
+      emit_render_state( gsockets.nn_render_socket, baseline + framenum * GAME_DELAY, srs );
+#endif
     } else {
       int ahead = framenum * GAME_DELAY - ( now - baseline );
       assert( ahead > 0 );
       printf( "game sleep %d ms\n", ahead );
       SDL_Delay( ahead );
     }
+#ifdef ZEROMQ_BRANCH
     char * cmd = zstr_recv_nowait( gsockets.zmq_control_socket );
+#endif
+#ifdef NANOMSG_BRANCH
+    char * cmd = gsockets.nn_control_socket->nstr_recv();
+#endif
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );
       free( cmd );

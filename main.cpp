@@ -25,13 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#define NANOMSG_BRANCH
-// #define ZEROMQ_BRANCH 
-
 #include "czmq.h"
 
 #include "nn.hpp"
-#include "nanomsg/inproc.h"
 #include "nanomsg/inproc.h"
 #include "nanomsg/pair.h"
 #include "nanomsg/reqrep.h"

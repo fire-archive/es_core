@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _RENDER_MAIN_H_
 #define _RENDER_MAIN_H_
+#include "nn.hpp"
 
 typedef struct RenderThreadParms_s {
   Ogre::Root * root;

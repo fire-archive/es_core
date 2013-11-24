@@ -5,6 +5,8 @@ cmake_policy( SET CMP0007 NEW ) # this one it actually complained
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_BINARY_DIR}/Run/CMake")
 
+add_definitions( -DNANOMSG_BRANCH )
+
 project( es_core )
 
 find_package( OGRE REQUIRED )

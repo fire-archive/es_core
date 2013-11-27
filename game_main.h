@@ -32,7 +32,9 @@ const int GAME_DELAY = 16;
 const float GAME_TICK_FLOAT = (float)GAME_DELAY / 1000.0f;
 
 typedef struct GameThreadParms_s {
+#ifdef ZEROMQ_BRANCH
   zctx_t * zmq_context;
+#endif
 } GameThreadParms;
 
 typedef struct GameThreadSockets_s {

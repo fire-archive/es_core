@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 
 #include "nn.hpp"
-#include "nanomsg/pair.h"
+#include "nanomsg/bus.h"
 #include "nanomsg/reqrep.h"
 
 #include "SDL.h"
@@ -54,14 +54,14 @@ int game_thread( void * _parms ) {
   GameState gs;
   SharedRenderState srs;
 
-  nn::socket nn_control_socket( AF_SP, NN_PAIR );
+  nn::socket nn_control_socket( AF_SP, NN_BUS );
   gsockets.nn_control_socket = &nn_control_socket;
   {
     int ret = gsockets.nn_control_socket->connect( "inproc://control_game" );
     assert( ret == 0 );
   }
 
-  nn::socket nn_render_socket( AF_SP, NN_PAIR );
+  nn::socket nn_render_socket( AF_SP, NN_BUS );
   gsockets.nn_render_socket = &nn_render_socket;
   gsockets.nn_render_socket->connect( "inproc://game_render" );
 

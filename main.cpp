@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/inproc.h"
-#include "nanomsg/pair.h"
+#include "nanomsg/bus.h"
 #include "nanomsg/reqrep.h"
 
 #include "SDL.h"
@@ -219,10 +219,10 @@ int main( int argc, char *argv[] ) {
 
     // NOTE: since we are driving with SDL, we need to keep the Ogre side updated for window visibility
     ogre_render_window->setVisible( true );
-    nn::socket nn_game_socket(AF_SP, NN_PAIR); // 2 way radio
+    nn::socket nn_game_socket(AF_SP, NN_BUS); // Routing
     nn_game_socket.bind("inproc://control_game");
 
-    nn::socket nn_render_socket(AF_SP, NN_PAIR); // 2 way radio
+    nn::socket nn_render_socket(AF_SP, NN_BUS); // Routing
     nn_render_socket.bind("inproc://control_render");
 
     nn::socket nn_input_rep(AF_SP, NN_REP); // I ask, you answer

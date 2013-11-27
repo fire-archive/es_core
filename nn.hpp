@@ -182,64 +182,66 @@ namespace nn
             return rc;
         }
 
-		/*  Use a string formatted with format strings and return new buffer. 
-			If there was not enough memory, returns NULL. */
-		inline char * s_vprintf (const char *format, va_list argptr)
-		{
-			int size = 256;
-			char * string = (char *) malloc (size);
-			if(!string) {
-			  return NULL;
-			}
-			int required = vsnprintf (string, size, format, argptr); 
-		#if defined _MSC_VER
-			if (required < 0 || required >= size)
-				required = _vscprintf (format, argptr);
-		#endif
-			//  If the string does not fit, allocate a larger buffer for it.
-			if (required >= size) {
-				size = required + 1;
+        /*  Use a string formatted with format strings and return new buffer. 
+            If there was not enough memory, returns NULL. */
+        inline char * s_vprintf (const char *format, va_list argptr)
+        {
+            int size = 256;
+            char * string = (char *) malloc (size);
+            if(string == 0) {
+              return NULL;
+            }
+            int required = vsnprintf (string, size, format, argptr); 
+        #if defined _MSC_VER
+            if (required < 0 || required >= size)
+                required = _vscprintf (format, argptr);
+        #endif
+            //  If the string does not fit, allocate a larger buffer for it.
+            if (required >= size) {
+                size = required + 1;
 
-				char * temp = (char *) realloc (string, size);
-				if (!temp) {
-					free(string);
-					return NULL;
-				}
-				string = temp;
+                char * temp = (char *) realloc (string, size);
+                if (temp == 0) {
+                    free(string);
+                    return NULL;
+                }
+                string = temp;
         
-				vsnprintf (string, size, format, argptr);
-			}
-			return string;
-		}
+                vsnprintf (string, size, format, argptr);
+            }
+            return string;
+        }
 
-		/* Send C string. Returns 0 if successful, -1 if there was an failure. */
-		inline int nstr_send (const char *format, ...)
-		{
-			assert (format);
+        /* Send C string. Returns 0 if successful, -1 if there was an failure. */
+        inline int nstr_send (const char *format, ...)
+        {
+            assert (format);
     
-			va_list argptr;
-			va_start (argptr, format);
-			char *string = s_vprintf (format, argptr);
-			va_end (argptr);
+            va_list argptr;
+            va_start (argptr, format);
+            char *string = s_vprintf (format, argptr);
+            va_end (argptr);
 
-			int rc = send(string, NN_MSG, 0); 
-			assert (rc == sz_msg);
-			free (string);
-			return rc;
-		}
+            void *msg = nn_allocmsg(sizeof(string), 0);
+            strncpy((char *)msg, string, sizeof(string));
+            int rc = send(&msg, NN_MSG, 0);
 
-		/* Get C string. Returns NULL if there is an error. 
-		   Must call nn_freemsg(buf) after use */
-		inline char * nstr_recv ()
-		{
-			void *buf = NULL;
-			const int nbytes = recv(&buf, NN_MSG, 0);
-			assert (nbytes >= 0);
-			char *string = (char *) malloc (nbytes + 1);
-			memcpy (string, &buf, nbytes);
-			nn_freemsg (buf);
-			return string;
-		}
+            return rc;
+        }
+
+        /* Get C string. Returns NULL if there is an error. 
+           Must call nn_freemsg(buf) after use */
+        inline char * nstr_recv ()
+        {
+            void *buf = NULL;
+            const int nbytes = recv(&buf, NN_MSG, 0);
+            if(nbytes < 0) 
+                return NULL;
+            char *string = (char *) malloc(nbytes + 1);
+            memcpy(string, &buf, nbytes);
+            nn_freemsg(buf);
+            return string;
+        }
 
     private:
 

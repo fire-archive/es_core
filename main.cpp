@@ -365,9 +365,9 @@ int main( int argc, char *argv[] ) {
     } else {
       printf( "SDL_Event %d\n", event.type );
     }
-      }
-      // we are ready to process the request now
-      if ( strcmp( input_request, "mouse_state" ) == 0 ) {
+  }
+    // we are ready to process the request now
+    if ( strcmp( input_request, "mouse_state" ) == 0 ) {
     int x, y;
     Uint8 buttons = SDL_GetMouseState( &x, &y );
 #ifdef ZEROMQ_BRANCH   

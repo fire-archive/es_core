@@ -116,7 +116,7 @@ void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_th
     char * req = zstr_recv_nowait( zmq_input_rep );
 #endif
 #ifdef NANOMSG_BRANCH
-	char * req = nn_input_rep->nstr_recv();
+	char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
 #endif
 	if ( req != NULL ) {
       delete( req );
@@ -368,25 +368,25 @@ int main( int argc, char *argv[] ) {
   }
     // we are ready to process the request now
     if ( strcmp( input_request, "mouse_state" ) == 0 ) {
-    int x, y;
-    Uint8 buttons = SDL_GetMouseState( &x, &y );
+      int x, y;
+      Uint8 buttons = SDL_GetMouseState( &x, &y );
 #ifdef ZEROMQ_BRANCH   
-    zstr_send( zmq_input_rep, "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+      zstr_send( zmq_input_rep, "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
 #endif
 #ifdef NANOMSG_BRANCH
-    nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+      nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
 #endif
-      } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
+    } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
     // looking at a few hardcoded keys for now
     // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
+      const Uint8 *state = SDL_GetKeyboardState(NULL);
 #ifdef ZEROMQ_BRANCH
-    zstr_send( zmq_input_rep, "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+      zstr_send( zmq_input_rep, "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
 #endif
 #ifdef NANOMSG_BRANCH
-    nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+      nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
 #endif
-      } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
+    } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
     // reset the orientation
     parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
 

@@ -230,10 +230,10 @@ namespace nn
         }
 
         /* Get C string. Returns NULL if there is an error. */
-        inline char * nstr_recv ()
+        inline char * nstr_recv (int flags = 0)
         {
             void *buf = NULL;
-            const int nbytes = recv(&buf, NN_MSG, 0);
+            const int nbytes = recv(&buf, NN_MSG, flags);
             if(nbytes < 0)
                 return NULL;
             char *string = (char *) malloc(nbytes + 1);

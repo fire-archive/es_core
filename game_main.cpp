@@ -122,7 +122,7 @@ int game_thread( void * _parms ) {
     char * cmd = zstr_recv_nowait( gsockets.zmq_control_socket );
 #endif
 #ifdef NANOMSG_BRANCH
-    char * cmd = gsockets.nn_control_socket->nstr_recv();
+    char * cmd = gsockets.nn_control_socket->nstr_recv(NN_DONTWAIT);
 #endif
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );

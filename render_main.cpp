@@ -126,7 +126,7 @@ int render_thread( void * _parms ) {
     char * cmd = zstr_recv_nowait( zmq_control_socket );
 #endif
 #ifdef NANOMSG_BRANCH
-    char * cmd = nn_control_socket.nstr_recv();
+    char * cmd = nn_control_socket.nstr_recv(NN_DONTWAIT);
 #endif
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );
@@ -139,7 +139,7 @@ int render_thread( void * _parms ) {
       char * game_tick = zstr_recv_nowait( zmq_game_socket );
 #endif
 #ifdef NANOMSG_BRANCH
-      char * game_tick = nn_game_socket.nstr_recv();
+      char * game_tick = nn_game_socket.nstr_recv(NN_DONTWAIT);
 #endif
       if ( game_tick == NULL ) {
 	    break;

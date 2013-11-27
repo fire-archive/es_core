@@ -229,13 +229,12 @@ namespace nn
             return rc;
         }
 
-        /* Get C string. Returns NULL if there is an error. 
-           Must call nn_freemsg(buf) after use */
+        /* Get C string. Returns NULL if there is an error. */
         inline char * nstr_recv ()
         {
             void *buf = NULL;
             const int nbytes = recv(&buf, NN_MSG, 0);
-            if(nbytes < 0) 
+            if(nbytes < 0)
                 return NULL;
             char *string = (char *) malloc(nbytes + 1);
             memcpy(string, &buf, nbytes);

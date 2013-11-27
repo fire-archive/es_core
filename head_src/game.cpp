@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "czmq.h"
+#include <random>
 #include "../nn.hpp"
 
 #include "SDL.h"
@@ -62,7 +62,8 @@ void parse_mouse_state( char * mouse_state, Ogre::Quaternion & orientation, uint
 void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & rs ) {
   time_t now;
   time( &now );
-  srandom( (unsigned int)now ); 
+  std::mt19937 rng;
+  rng.seed( (unsigned long)now );
   gs.bounce = 25.0f;
   gs.speed = (float)( rand() % 60 + 40 );
   float angle = (float)( rand() % 360 ) * 2.0f * (float)M_PI / 360.0f;
@@ -75,27 +76,15 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   gs.orientation_index = 0;
   memset( gs.orientation_history, 0, sizeof( gs.orientation_history ) );
   // set the input code to manipulate an object rather than look around
-#ifdef ZEROMQ_BRANCH
-  zstr_send( gsockets.zmq_input_req, "config_look_around 0" );
-  char * foo = zstr_recv( gsockets.zmq_input_req );
-#endif
-#ifdef NANOMSG_BRANCH
   gsockets.nn_input_req->nstr_send( "config_look_around 0" );
   char * foo = gsockets.nn_input_req->nstr_recv();
-#endif
   free( foo );
 }
 
 void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & srs, unsigned int now ) {
   // get the latest mouse buttons state and orientation
-#ifdef ZEROMQ_BRANCH
-  zstr_send( gsockets.zmq_input_req, "mouse_state" );
-  char * mouse_state = zstr_recv( gsockets.zmq_input_req );
-#endif
-#ifdef NANOMSG_BRANCH
   gsockets.nn_input_req->nstr_send( "mouse_state" );
   char * mouse_state = gsockets.nn_input_req->nstr_recv();
-#endif
   
   uint8_t buttons;
   Ogre::Quaternion orientation;
@@ -126,22 +115,14 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       gs.mouse_pressed = true;
       // changing the control scheme: the player is now driving the orientation of the head directly with the mouse
       // tell the input logic to reset the orientation to match the current orientation of the head
-#ifdef ZEROMQ_BRANCH
-      zstr_send( gsockets.zmq_input_req, "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
-      zstr_recv( gsockets.zmq_input_req ); // wait for ack from input
-#endif
-#ifdef NANOMSG_BRANCH
+
       gsockets.nn_input_req->nstr_send( "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
       gsockets.nn_input_req->nstr_recv();
-#endif
+
       // IF RENDER TICK HAPPENS HERE: render will not know that it should grab the orientation directly from the mouse,
       // but the orientation coming from game should still be ok?
-#ifdef ZEROMQ_BRANCH
-      zstr_send( gsockets.zmq_render_socket, "# %s", "1" );
-#endif
-#ifdef NANOMSG_BRANCH
       gsockets.nn_render_socket->nstr_send( "# %s", "1" );
-#endif
+
       // IF RENDER TICK HAPPENS HERE (before a new gamestate):
       // the now reset input orientation will combine with the old game state, that's bad
     }
@@ -154,12 +135,9 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       srs.orientation = orientation;
       gs.rotation_speed = gs.smoothed_angular_velocity;
       gs.rotation = gs.smoothed_angular;
-#ifdef ZEROMQ_BRANCH
-      zstr_send( gsockets.zmq_render_socket, "# %s", "0" );
-#endif
-#ifdef NANOMSG_BRANCH
+
       gsockets.nn_render_socket->nstr_send( "# %s", "0" );
-#endif
+
       // IF RENDER TICK HAPPENS HERE (before a new gamestate): render will pull the head orientation from the game state rather than input, but game state won't have the fixed orientation yet
     }
   }
@@ -201,14 +179,6 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   }
 }
 
-
-#ifdef ZEROMQ_BRANCH
-void emit_render_state( void * socket, unsigned int time, SharedRenderState & srs ) {
-    zstr_send( socket, "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
-}
-#endif
-#ifdef NANOMSG_BRANCH
 void emit_render_state( nn::socket * socket, unsigned int time, SharedRenderState & srs ) {
     socket->nstr_send( "%d %f %f %f %f %f %f %f %f %f", time, srs.position.x, srs.position.y, srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z, srs.smoothed_angular.x, srs.smoothed_angular.y, srs.smoothed_angular.z );
 }
-#endif

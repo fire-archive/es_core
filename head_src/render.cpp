@@ -25,7 +25,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "czmq.h"
 #include "../nn.hpp"
 
 #include "SDL.h"
@@ -171,14 +170,8 @@ void interpolate_and_render( RenderThreadSockets & rsockets, RenderState & rs, f
   Ogre::Vector3 interp_position = ( 1.0f - ratio ) * previous_render.position + ratio * next_render.position;
   rs.head_node->setPosition( interp_position );
   if ( rs.mouse_control ) {
-#ifdef ZEROMQ_BRANCH
-    zstr_send( rsockets.zmq_input_req, "mouse_state" );
-    char * mouse_state = zstr_recv( rsockets.zmq_input_req );
-#endif
-#ifdef NANOMSG_BRANCH
     rsockets.nn_input_req->nstr_send( "mouse_state" );
     char * mouse_state = rsockets.nn_input_req->nstr_recv();
-#endif
     Ogre::Quaternion orientation;
     parse_mouse_state( mouse_state, orientation );
     free( mouse_state );

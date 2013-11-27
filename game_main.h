@@ -38,16 +38,9 @@ typedef struct GameThreadParms_s {
 } GameThreadParms;
 
 typedef struct GameThreadSockets_s {
-#ifdef ZEROMQ_BRANCH
-  void * zmq_control_socket;
-  void * zmq_input_req;
-  void * zmq_render_socket;
-#endif
-#ifdef NANOMSG_BRANCH
   nn::socket * nn_control_socket;
   nn::socket * nn_input_req;
   nn::socket * nn_render_socket;
-#endif
 } GameThreadSockets;
 
 int game_thread( void * ); // GameThreadParms *

@@ -34,18 +34,12 @@ typedef struct RenderThreadParms_s {
   SDL_Window * window;
   SDL_GLContext gl_context;
   Ogre::RenderWindow * ogre_window;
-  zctx_t * zmq_context;
   int argc;
   char * * argv;
 } RenderThreadParms;
 
 typedef struct RenderThreadSockets_s {
-#ifdef ZEROMQ_BRANCH
-  void * zmq_input_req;
-#endif
-#ifdef NANOMSG_BRANCH
   nn::socket * nn_input_req;
-#endif
 } RenderThreadSockets;
 
 int render_thread( void * );

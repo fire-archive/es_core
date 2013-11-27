@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nn.hpp"
 #include "nanomsg/pair.h"
 #include "nanomsg/reqrep.h"
-#include "czmq.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -55,23 +54,6 @@ int game_thread( void * _parms ) {
   GameState gs;
   SharedRenderState srs;
 
-#ifdef ZEROMQ_BRANCH
-  gsockets.zmq_control_socket = zsocket_new( parms->zmq_context, ZMQ_PAIR );
-  {
-    int ret = zsocket_connect( gsockets.zmq_control_socket, "inproc://control_game" );
-    assert( ret == 0 );
-  }
-  
-  gsockets.zmq_render_socket = zsocket_new( parms->zmq_context, ZMQ_PAIR );
-  zsocket_bind( gsockets.zmq_render_socket, "inproc://game_render" );
-
-  gsockets.zmq_input_req = zsocket_new( parms->zmq_context, ZMQ_REQ );
-  {
-    int ret = zsocket_connect( gsockets.zmq_input_req, "inproc://input" );
-    assert( ret == 0 );
-  }
-#endif
-#ifdef NANOMSG_BRANCH
   nn::socket nn_control_socket( AF_SP, NN_PAIR );
   gsockets.nn_control_socket = &nn_control_socket;
   {
@@ -89,7 +71,6 @@ int game_thread( void * _parms ) {
     int ret = gsockets.nn_input_req->connect( "inproc://input" );
     assert ( ret == 0) ;
   }
-#endif
 
   game_init( gsockets, gs, srs );
 
@@ -106,24 +87,16 @@ int game_thread( void * _parms ) {
       game_tick( gsockets, gs, srs, now );
       // notify the render thread that a new game state is ready.
       // on the next render frame, it will start interpolating between the previous state and this new one
-#ifdef ZEROMQ_BRANCH
-      emit_render_state( gsockets.zmq_render_socket, baseline + framenum * GAME_DELAY, srs );
-#endif
-#ifdef NANOMSG_BRANCH
+
       emit_render_state( gsockets.nn_render_socket, baseline + framenum * GAME_DELAY, srs );
-#endif
     } else {
       int ahead = framenum * GAME_DELAY - ( now - baseline );
       assert( ahead > 0 );
       printf( "game sleep %d ms\n", ahead );
       SDL_Delay( ahead );
     }
-#ifdef ZEROMQ_BRANCH
-    char * cmd = zstr_recv_nowait( gsockets.zmq_control_socket );
-#endif
-#ifdef NANOMSG_BRANCH
     char * cmd = gsockets.nn_control_socket->nstr_recv(NN_DONTWAIT);
-#endif
+
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );
       free( cmd );

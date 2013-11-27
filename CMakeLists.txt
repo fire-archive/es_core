@@ -26,7 +26,6 @@ include_directories( "${CMAKE_INSTALL_PREFIX}/include/SDL2" )
 include_directories( ${OGRE_INCLUDE_DIRS} )
 include_directories( "${CMAKE_INSTALL_PREFIX}/include" )
 
-target_link_libraries( ${executable} czmq ${LIBZMQ} )
 target_link_libraries( ${executable} "nanomsg" )
 target_link_libraries( ${executable} SDL2 )
 target_link_libraries( ${executable} ${OGRE_LIBRARIES} )
@@ -54,8 +53,6 @@ if ( APPLE )
 endif ( APPLE )
 endfunction( add_es )
 
-set ( LIBZMQ libzmq )
-file(GLOB LIBZMQ ${CMAKE_INSTALL_PREFIX}/lib/libzmq-*)
 set ( WINDOWS_LIBS imm32.lib winmm.lib version.lib )
 
 # BSP -----------------

@@ -259,13 +259,13 @@ int main( int argc, char *argv[] ) {
     zsocket_bind( zmq_input_rep, "inproc://input" );
 #endif
 #ifdef NANOMSG_BRANCH
-    nn::socket nn_game_socket(AF_SP, NN_PAIR);
+    nn::socket nn_game_socket(AF_SP, NN_PAIR); // 2 way radio
     nn_game_socket.bind("inproc://control_game");
 
-    nn::socket nn_render_socket(AF_SP, NN_PAIR);
+    nn::socket nn_render_socket(AF_SP, NN_PAIR); // 2 way radio
     nn_render_socket.bind("inproc://control_render");
 
-    nn::socket nn_input_rep(AF_SP, NN_REP);
+    nn::socket nn_input_rep(AF_SP, NN_REP); // I ask, you answer
     nn_input_rep.bind("inproc://input");
 #endif
     GameThreadParms game_thread_parms;

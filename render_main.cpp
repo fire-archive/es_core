@@ -142,7 +142,7 @@ int render_thread( void * _parms ) {
       char * game_tick = nn_game_socket.nstr_recv();
 #endif
       if ( game_tick == NULL ) {
-	break;
+	    break;
       }
 
       srs_index ^= 1;

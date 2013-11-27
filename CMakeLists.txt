@@ -63,7 +63,7 @@ add_es( bsp )
 
 # HEAD ----------------
 
-list( APPEND HEAD_SOURCES nn.hpp main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/render.cpp )
+list( APPEND HEAD_SOURCES game_main.h render_main.h nn.hpp main.cpp game_main.cpp render_main.cpp head_src/game.cpp head_src/game.h head_src/render.h head_src/shared_render_state.h head_src/render.cpp )
 add_executable( head ${HEAD_SOURCES} )
 
 set_property( TARGET head PROPERTY INCLUDE_DIRECTORIES ${HEAD_INCLUDES} )

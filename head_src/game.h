@@ -52,11 +52,6 @@ typedef struct GameState_s {
 
 void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & rs );
 void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & rs, unsigned int now );
-#ifdef ZEROMQ_BRANCH
-void emit_render_state( void * socket, unsigned int time, SharedRenderState & rs );
-#endif
-#ifdef NANOMSG_BRANCH
 void emit_render_state( nn::socket * socket, unsigned int time, SharedRenderState & rs );
-#endif
 
 #endif

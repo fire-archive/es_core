@@ -118,7 +118,7 @@ int main( int argc, char *argv[] ) {
     printf( "SDL_GetWindowWMInfo failed.\n" );
     return -1;
   }
-  
+
   try {
 
     Ogre::Root * ogre_root = new Ogre::Root();
@@ -199,7 +199,7 @@ int main( int argc, char *argv[] ) {
 
     SDL_SetWindowGrab( window, SDL_TRUE );
     SDL_SetRelativeMouseMode( SDL_TRUE );
-  
+
     //    const int MAX_RUN_TIME = 3 * 60 * 1000; // shutdown the whole thing after some time
     bool shutdown_requested = false;
     InputState is;
@@ -211,7 +211,7 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
     while ( !shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */ ) {
       // we wait here
-	  char * input_request = nn_input_rep.nstr_recv();
+      char * input_request = nn_input_rep.nstr_recv();
 
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state
@@ -219,81 +219,81 @@ int main( int argc, char *argv[] ) {
       //   plus it throws some latency into the calling thread
       SDL_Event event;
       while ( SDL_PollEvent( &event ) ) {
-    if ( event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ) {
-      printf( "SDL_KeyboardEvent\n" );
-      if ( event.type == SDL_KEYUP && ((SDL_KeyboardEvent*)&event)->keysym.scancode == SDL_SCANCODE_ESCAPE ) {
-        send_shutdown( &nn_render_socket, &nn_game_socket );
+        if ( event.type == SDL_KEYDOWN || event.type == SDL_KEYUP ) {
+          printf( "SDL_KeyboardEvent\n" );
+          if ( event.type == SDL_KEYUP && ((SDL_KeyboardEvent*)&event)->keysym.scancode == SDL_SCANCODE_ESCAPE ) {
+            send_shutdown( &nn_render_socket, &nn_game_socket );
 
-        shutdown_requested = true;	    
+            shutdown_requested = true;	    
+          }
+        } else if ( event.type == SDL_MOUSEMOTION ) {
+          SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
+          // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+          is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
+          if ( is.yaw >= 0.0f ) {
+            is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
+          } else {
+            is.yaw = fmod( is.yaw - 180.0f, 360.0f ) + 180.0f;
+          }
+          // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+          is.pitch += is.orientation_factor * is.pitch_sens * (float)mev->yrel;
+          if ( is.pitch > 90.0f ) {
+            is.pitch = 90.0f;
+          } else if ( is.pitch < -90.0f ) {
+            is.pitch = -90.0f;
+          }
+          // build a quaternion of the current orientation
+          Ogre::Matrix3 r;
+          r.FromEulerAnglesYXZ( Ogre::Radian( Ogre::Degree( is.yaw ) ), Ogre::Radian( Ogre::Degree( is.pitch ) ), Ogre::Radian( Ogre::Degree( is.roll ) ) );
+          is.orientation.FromRotationMatrix( r );
+        } else if ( event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN ) {
+          printf( "SDL_MouseButtonEvent\n" );
+        } else if ( event.type == SDL_QUIT ) {
+          printf( "SDL_Quit\n" );
+          // push a shutdown on the control socket, game and render will pick it up later
+          // NOTE: if the req/rep patterns change we may still have to deal with hangs here
+          send_shutdown( &nn_render_socket, &nn_game_socket );
+
+          shutdown_requested = true;
+        } else {
+          printf( "SDL_Event %d\n", event.type );
+        }
       }
-    } else if ( event.type == SDL_MOUSEMOTION ) {
-      SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
-      // + when manipulating an object, - when doing a first person view .. needs to be configurable?
-      is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
-      if ( is.yaw >= 0.0f ) {
-        is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
-      } else {
-        is.yaw = fmod( is.yaw - 180.0f, 360.0f ) + 180.0f;
-      }
-      // + when manipulating an object, - when doing a first person view .. needs to be configurable?
-      is.pitch += is.orientation_factor * is.pitch_sens * (float)mev->yrel;
-      if ( is.pitch > 90.0f ) {
-        is.pitch = 90.0f;
-      } else if ( is.pitch < -90.0f ) {
-        is.pitch = -90.0f;
-      }
-      // build a quaternion of the current orientation
-      Ogre::Matrix3 r;
-      r.FromEulerAnglesYXZ( Ogre::Radian( Ogre::Degree( is.yaw ) ), Ogre::Radian( Ogre::Degree( is.pitch ) ), Ogre::Radian( Ogre::Degree( is.roll ) ) );
-      is.orientation.FromRotationMatrix( r );
-    } else if ( event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEBUTTONDOWN ) {
-      printf( "SDL_MouseButtonEvent\n" );
-    } else if ( event.type == SDL_QUIT ) {
-      printf( "SDL_Quit\n" );
-      // push a shutdown on the control socket, game and render will pick it up later
-      // NOTE: if the req/rep patterns change we may still have to deal with hangs here
-      send_shutdown( &nn_render_socket, &nn_game_socket );
+      // we are ready to process the request now
+      if ( strcmp( input_request, "mouse_state" ) == 0 ) {
+        int x, y;
+        Uint8 buttons = SDL_GetMouseState( &x, &y );
+        nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
 
-      shutdown_requested = true;
-    } else {
-      printf( "SDL_Event %d\n", event.type );
-    }
-  }
-    // we are ready to process the request now
-    if ( strcmp( input_request, "mouse_state" ) == 0 ) {
-      int x, y;
-      Uint8 buttons = SDL_GetMouseState( &x, &y );
-      nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+      } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
+        // looking at a few hardcoded keys for now
+        // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
+        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+      } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
+        // reset the orientation
+        parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
 
-    } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
-    // looking at a few hardcoded keys for now
-    // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
-      const Uint8 *state = SDL_GetKeyboardState(NULL);
-      nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
-    } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
-    // reset the orientation
-    parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
+        Ogre::Matrix3 r;
+        is.orientation.ToRotationMatrix( r );
+        Ogre::Radian rfYAngle, rfPAngle, rfRAngle;
+        r.ToEulerAnglesYXZ( rfYAngle, rfPAngle, rfRAngle );
+        is.yaw = rfYAngle.valueDegrees();
+        is.pitch = rfPAngle.valueDegrees();
+        is.roll = rfRAngle.valueDegrees();
 
-    Ogre::Matrix3 r;
-    is.orientation.ToRotationMatrix( r );
-    Ogre::Radian rfYAngle, rfPAngle, rfRAngle;
-    r.ToEulerAnglesYXZ( rfYAngle, rfPAngle, rfRAngle );
-    is.yaw = rfYAngle.valueDegrees();
-    is.pitch = rfPAngle.valueDegrees();
-    is.roll = rfRAngle.valueDegrees();
-
-    nn_input_rep.nstr_send( "" ); // nop (acknowledge)
+        nn_input_rep.nstr_send( "" ); // nop (acknowledge)
       } else if ( strncmp( input_request, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
-    if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
-      printf( "input configuration: manipulate object\n" );
-      is.orientation_factor = 1.0f;
-    } else {
-      printf( "input configuration: look around\n" );
-      is.orientation_factor = -1.0f;
-    }
-    nn_input_rep.nstr_send( "" ); // nop
+        if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
+          printf( "input configuration: manipulate object\n" );
+          is.orientation_factor = 1.0f;
+        } else {
+          printf( "input configuration: look around\n" );
+          is.orientation_factor = -1.0f;
+        }
+        nn_input_rep.nstr_send( "" ); // nop
       } else {
-          nn_input_rep.nstr_send( "" ); //nop
+        nn_input_rep.nstr_send( "" ); //nop
       }
       free( input_request );
     }
@@ -355,8 +355,8 @@ void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_th
   // for now, loop the input thread for a bit to flush out any events
   Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
   while ( SDL_GetTicks() < continue_time ) {
-	char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
-	if ( req != NULL ) {
+    char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
+    if ( req != NULL ) {
       delete( req );
       // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
       // which isn't the case, so the parsing code might crash .. still better than a hang

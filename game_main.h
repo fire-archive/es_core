@@ -38,6 +38,7 @@ typedef struct GameThreadSockets_s {
   nn::socket * nn_control_socket;
   nn::socket * nn_input_mouse_sub;
   nn::socket * nn_input_kb_sub;
+  nn::socket * nn_input_push;
   nn::socket * nn_render_socket;
 } GameThreadSockets;
 

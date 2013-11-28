@@ -27,7 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/bus.h"
-#include "nanomsg/reqrep.h"
+#include "nanomsg/pipeline.h"
+#include "nanomsg/pair.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -58,13 +59,13 @@ int render_thread( void * _parms ) {
   RenderThreadParms * parms = (RenderThreadParms*)_parms;
   RenderThreadSockets rsockets;
 
-  nn::socket nn_control_socket( AF_SP, NN_BUS );
+  nn::socket nn_control_socket( AF_SP, NN_PAIR );
   {
     int ret = nn_control_socket.connect( "inproc://control_render" );
     assert( ret == 0 );
   }
 
-  nn::socket nn_game_socket( AF_SP, NN_BUS );
+  nn::socket nn_game_socket( AF_SP, NN_PAIR );
   {
     int ret = nn_game_socket.connect( "inproc://game_render" );
     // NOTE: since both render thread and game thread get spun at the same time,
@@ -73,10 +74,10 @@ int render_thread( void * _parms ) {
     assert ( ret == 0 );
   }
 
-  nn::socket nn_input_sub( AF_SP, NN_REQ );
-  rsockets.nn_input_sub = &nn_input_sub;
+  nn::socket nn_input_push( AF_SP, NN_PUSH );
+  rsockets.nn_input_push = &nn_input_push;
   {
-    int ret = rsockets.nn_input_sub->connect( "inproc://input" );
+    int ret = rsockets.nn_input_push->connect( "inproc://input_pull" );
     assert ( ret == 0 );
   }
 #ifdef __APPLE__

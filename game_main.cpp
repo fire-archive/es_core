@@ -31,7 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/bus.h"
+#include "nanomsg/pair.h"
 #include "nanomsg/pubsub.h"
+#include "nanomsg/pipeline.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -54,23 +56,23 @@ int game_thread( void * _parms ) {
   GameState gs;
   SharedRenderState srs;
 
-  nn::socket nn_control_socket( AF_SP, NN_BUS );
+  nn::socket nn_control_socket( AF_SP, NN_PAIR );
   gsockets.nn_control_socket = &nn_control_socket;
   {
     int ret = gsockets.nn_control_socket->connect( "inproc://control_game" );
     assert( ret == 0 );
   }
 
-  nn::socket nn_render_socket( AF_SP, NN_BUS );
+  nn::socket nn_render_socket( AF_SP, NN_PAIR );
   gsockets.nn_render_socket = &nn_render_socket;
-  gsockets.nn_render_socket->connect( "inproc://game_render" );
+  gsockets.nn_render_socket->bind( "inproc://game_render" );
 
   nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
   gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
     int ret = gsockets.nn_input_mouse_sub->connect( "inproc://input" );
-    assert ( ret == 0) ;
+    assert ( ret == 0 );
   }
 
   nn::socket nn_input_kb_sub( AF_SP, NN_SUB );
@@ -78,7 +80,14 @@ int game_thread( void * _parms ) {
   gsockets.nn_input_kb_sub = &nn_input_kb_sub;
   {
     int ret = gsockets.nn_input_kb_sub->connect( "inproc://input" );
-    assert ( ret == 0) ;
+    assert ( ret == 0 );
+  }
+
+  nn::socket nn_input_push( AF_SP, NN_PUSH );
+  gsockets.nn_input_push = &nn_input_push;
+  {
+    int ret = gsockets.nn_input_push->connect( "inproc://input_pull" );
+    assert ( ret == 0 );
   }
 
   game_init( gsockets, gs, srs );

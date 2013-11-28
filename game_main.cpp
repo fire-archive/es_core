@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/bus.h"
-#include "nanomsg/reqrep.h"
+#include "nanomsg/pubsub.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -65,10 +65,19 @@ int game_thread( void * _parms ) {
   gsockets.nn_render_socket = &nn_render_socket;
   gsockets.nn_render_socket->connect( "inproc://game_render" );
 
-  nn::socket nn_input_req( AF_SP, NN_REQ );  
-  gsockets.nn_input_req = &nn_input_req;
+  nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
+  nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
+  gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-    int ret = gsockets.nn_input_req->connect( "inproc://input" );
+    int ret = gsockets.nn_input_mouse_sub->connect( "inproc://input" );
+    assert ( ret == 0) ;
+  }
+
+  nn::socket nn_input_kb_sub( AF_SP, NN_SUB );
+  nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 0 );
+  gsockets.nn_input_kb_sub = &nn_input_kb_sub;
+  {
+    int ret = gsockets.nn_input_kb_sub->connect( "inproc://input" );
     assert ( ret == 0) ;
   }
 

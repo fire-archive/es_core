@@ -39,7 +39,7 @@ typedef struct RenderThreadParms_s {
 } RenderThreadParms;
 
 typedef struct RenderThreadSockets_s {
-  nn::socket * nn_input_req;
+  nn::socket * nn_input_sub;
 } RenderThreadSockets;
 
 int render_thread( void * );

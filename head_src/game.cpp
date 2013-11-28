@@ -77,13 +77,11 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   memset( gs.orientation_history, 0, sizeof( gs.orientation_history ) );
   // set the input code to manipulate an object rather than look around
   gsockets.nn_input_req->nstr_send( "config_look_around 0" );
-  char * foo = gsockets.nn_input_req->nstr_recv();
-  free( foo );
 }
 
 void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & srs, unsigned int now ) {
   // get the latest mouse buttons state and orientation
-  gsockets.nn_input_req->nstr_send( "mouse_state" );
+  gsockets.nn_input_sub->nstr_send( "mouse_state" );
   char * mouse_state = gsockets.nn_input_req->nstr_recv();
   
   uint8_t buttons;

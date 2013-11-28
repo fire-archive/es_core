@@ -73,10 +73,10 @@ int render_thread( void * _parms ) {
     assert ( ret == 0 );
   }
 
-  nn::socket nn_input_req( AF_SP, NN_REQ );
-  rsockets.nn_input_req = &nn_input_req;
+  nn::socket nn_input_sub( AF_SP, NN_REQ );
+  rsockets.nn_input_sub = &nn_input_sub;
   {
-    int ret = rsockets.nn_input_req->connect( "inproc://input" );
+    int ret = rsockets.nn_input_sub->connect( "inproc://input" );
     assert ( ret == 0 );
   }
 #ifdef __APPLE__

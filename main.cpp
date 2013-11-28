@@ -65,59 +65,9 @@ typedef struct InputState_s {
   Ogre::Quaternion orientation;	// current orientation  
 } InputState;
 
-void parse_orientation( char * start, Ogre::Quaternion & orientation ) {
-  char * end = strchr( start, ' ' );
-  end[0] = '\0';
-  orientation.w = (float)atof( start );
-  start = end + 1;
-  end = strchr( start, ' ' );
-  end[0] = '\0';
-  orientation.x = (float)atof( start );
-  start = end + 1;
-  end = strchr( start, ' ' );
-  end[0] = '\0';
-  orientation.y = (float)atof( start );
-  start = end + 1;
-  orientation.z = (float)atof( start );
-}
-
-void send_shutdown( nn::socket * nn_render_socket, nn::socket * nn_game_socket ) {
-  nn_render_socket->nstr_send( "stop" );
-  nn_game_socket->nstr_send( "stop" );
-}
-
-void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, nn::socket * nn_input_rep ) {
-  // there is no timeout support in SDL_WaitThread, so we can only call it once we're sure the thread is going to finish
-  // the threads may do a few polls against the input thread before actually shutting down
-  // TODO: I'd like to come up with a more robust design:
-  // - thinking each thread should have a single select for all it's sockets, but that may not be practical
-  // - or add a control socket from each of these threads back to the main thread, so we can wait until the threads confirm that they are shutting down
-  // for now, loop the input thread for a bit to flush out any events
-  Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
-  while ( SDL_GetTicks() < continue_time ) {
-	char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
-	if ( req != NULL ) {
-      delete( req );
-      // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
-      // which isn't the case, so the parsing code might crash .. still better than a hang
-      nn_input_rep->nstr_send( "" );
-    } else {
-      SDL_Delay( 10 );
-    }
-  }
-  {
-    int status;
-    SDL_WaitThread( sdl_render_thread, &status );
-    printf( "render thread has stopped, status: %d\n", status );
-    sdl_render_thread = NULL;
-  }
-  {
-    int status;
-    SDL_WaitThread( sdl_game_thread, &status );
-    printf( "game thread has stopped, status: %d\n", status );
-    sdl_game_thread = NULL;
-  }
-}
+void parse_orientation( char * start, Ogre::Quaternion & orientation );
+void send_shutdown( nn::socket * nn_render_socket, nn::socket * nn_game_socket );
+void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, nn::socket * nn_input_rep );
 
 int main( int argc, char *argv[] ) {
   int retcode = 0;
@@ -373,4 +323,58 @@ int main( int argc, char *argv[] ) {
 #endif
 
   return retcode;
+}
+
+void parse_orientation( char * start, Ogre::Quaternion & orientation ) {
+  char * end = strchr( start, ' ' );
+  end[0] = '\0';
+  orientation.w = (float)atof( start );
+  start = end + 1;
+  end = strchr( start, ' ' );
+  end[0] = '\0';
+  orientation.x = (float)atof( start );
+  start = end + 1;
+  end = strchr( start, ' ' );
+  end[0] = '\0';
+  orientation.y = (float)atof( start );
+  start = end + 1;
+  orientation.z = (float)atof( start );
+}
+
+void send_shutdown( nn::socket * nn_render_socket, nn::socket * nn_game_socket ) {
+  nn_render_socket->nstr_send( "stop" );
+  nn_game_socket->nstr_send( "stop" );
+}
+
+void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, nn::socket * nn_input_rep ) {
+  // there is no timeout support in SDL_WaitThread, so we can only call it once we're sure the thread is going to finish
+  // the threads may do a few polls against the input thread before actually shutting down
+  // TODO: I'd like to come up with a more robust design:
+  // - thinking each thread should have a single select for all it's sockets, but that may not be practical
+  // - or add a control socket from each of these threads back to the main thread, so we can wait until the threads confirm that they are shutting down
+  // for now, loop the input thread for a bit to flush out any events
+  Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
+  while ( SDL_GetTicks() < continue_time ) {
+	char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
+	if ( req != NULL ) {
+      delete( req );
+      // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
+      // which isn't the case, so the parsing code might crash .. still better than a hang
+      nn_input_rep->nstr_send( "" );
+    } else {
+      SDL_Delay( 10 );
+    }
+  }
+  {
+    int status;
+    SDL_WaitThread( sdl_render_thread, &status );
+    printf( "render thread has stopped, status: %d\n", status );
+    sdl_render_thread = NULL;
+  }
+  {
+    int status;
+    SDL_WaitThread( sdl_game_thread, &status );
+    printf( "game thread has stopped, status: %d\n", status );
+    sdl_game_thread = NULL;
+  }
 }

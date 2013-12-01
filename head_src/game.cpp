@@ -65,10 +65,10 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   std::mt19937 rng;
   rng.seed( (unsigned long)now );
   gs.bounce = 25.0f;
-  std::uniform_real_distribution<float> rand_speed(1, 60);
+  std::uniform_real_distribution<> rand_speed(1, 60);
   gs.speed = rand_speed(rng) + 40;
-  std::uniform_real_distribution<float> rand_angle(1, 360);
-  float angle = rand_angle(rng) * 2.0f * (float)M_PI / 360.0f;
+  std::uniform_real_distribution<> rand_angle(1, 360);
+  float angle = Ogre::Math::AngleUnitsToRadians(rand_angle(rng));
   gs.direction = Ogre::Vector2( cosf( angle ), sinf( angle ) );
   rs.orientation = Ogre::Quaternion( Ogre::Radian( 0.0f ), Ogre::Vector3::UNIT_Z );
   rs.position = Ogre::Vector3::ZERO;

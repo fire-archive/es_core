@@ -169,16 +169,16 @@ int main( int argc, char *argv[] ) {
     // NOTE: since we are driving with SDL, we need to keep the Ogre side updated for window visibility
     ogre_render_window->setVisible( true );
     nn::socket nn_game_socket(AF_SP, NN_PAIR); // Routing
-    nn_game_socket.bind( "tcp://*:60206" ); // control_game
+    nn_game_socket.bind( "tcp://127.0.0.1:60206" ); // control_game
 
     nn::socket nn_render_socket( AF_SP, NN_PAIR ); // Routing
-    nn_render_socket.bind( "tcp://*:60207" ); // control_render
+    nn_render_socket.bind( "tcp://127.0.0.1:60207" ); // control_render
 
     nn::socket nn_input_pub(AF_SP, NN_PUB); // Topics & Broadcast
-    nn_input_pub.bind( "tcp://*:60208" ); // input
+    nn_input_pub.bind( "tcp://127.0.0.1:60208" ); // input
     
     nn::socket nn_input_pull(AF_SP, NN_PULL); // A One-Way Pipe
-    nn_input_pull.bind( "tcp://*:60209" ); // input_pull
+    nn_input_pull.bind( "tcp://127.0.0.1:60209" ); // input_pull
 
     GameThreadParms game_thread_parms;
 

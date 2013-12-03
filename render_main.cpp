@@ -62,13 +62,13 @@ int render_thread( void * _parms ) {
 
   nn::socket nn_control_socket( AF_SP, NN_PAIR );
   {
-    int ret = nn_control_socket.connect( "tcp://*:60207" ); // control_render
+    int ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
     assert( ret == 0 );
   }
 
   nn::socket nn_game_socket( AF_SP, NN_PAIR );
   {
-    int ret = nn_game_socket.connect( "inproc://game_render" );
+    int ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
     // NOTE: since both render thread and game thread get spun at the same time,
     // and the connect needs to happen after the bind,
     // it's possible this would fail on occasion? just loop a few times and retry?
@@ -78,7 +78,7 @@ int render_thread( void * _parms ) {
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   rsockets.nn_input_push = &nn_input_push;
   {
-	int ret = rsockets.nn_input_push->connect( "tcp://*:60209" ); // input_pull
+	int ret = rsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
     assert ( ret == 0 );
   }
 
@@ -86,7 +86,7 @@ int render_thread( void * _parms ) {
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
   rsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-	int ret = rsockets.nn_input_mouse_sub->connect( "tcp://*:60208" ); // input
+	int ret = rsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
 	  assert(ret == 0);
   }
 

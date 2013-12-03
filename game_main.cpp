@@ -58,19 +58,19 @@ int game_thread( void * _parms ) {
   nn::socket nn_control_socket( AF_SP, NN_PAIR );
   gsockets.nn_control_socket = &nn_control_socket;
   {
-    int ret = gsockets.nn_control_socket->connect( "tcp://*:60206" ); // control_game
+    int ret = gsockets.nn_control_socket->connect( "tcp://127.0.0.1:60206" ); // control_game
     assert( ret == 0 );
   }
 
   nn::socket nn_render_socket( AF_SP, NN_PAIR );
   gsockets.nn_render_socket = &nn_render_socket;
-  gsockets.nn_render_socket->bind( "inproc://game_render" );
+  gsockets.nn_render_socket->bind( "tcp://127.0.0.1:60210" ); // game_render
 
   nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
   gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-    int ret = gsockets.nn_input_mouse_sub->connect( "tcp://*:60208" ); // input
+    int ret = gsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
     assert ( ret == 0 );
   }
 
@@ -78,14 +78,14 @@ int game_thread( void * _parms ) {
   nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 0 );
   gsockets.nn_input_kb_sub = &nn_input_kb_sub;
   {
-    int ret = gsockets.nn_input_kb_sub->connect( "tcp://*:60208" ); // input
+    int ret = gsockets.nn_input_kb_sub->connect( "tcp://127.0.0.1:60208" ); // input
     assert ( ret == 0 );
   }
 
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   gsockets.nn_input_push = &nn_input_push;
   {
-    int ret = gsockets.nn_input_push->connect( "tcp://*:60209" ); // input_pull
+    int ret = gsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
     assert ( ret == 0 );
   }
 

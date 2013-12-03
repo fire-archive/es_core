@@ -81,6 +81,15 @@ int render_thread( void * _parms ) {
 	int ret = rsockets.nn_input_push->connect( "tcp://*:60209" ); // input_pull
     assert ( ret == 0 );
   }
+
+  nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
+  nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
+  rsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
+  {
+	int ret = rsockets.nn_input_mouse_sub->connect( "tcp://*:60208" ); // input
+	  assert(ret == 0);
+  }
+
 #ifdef __APPLE__
   OSX_GL_set_current( parms->ogre_window );
 #else

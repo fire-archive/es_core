@@ -214,7 +214,9 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
     while ( !shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */ ) {
       // we wait here
-      char * input_pull = nn_input_pull.nstr_recv();
+	  char * input_pull = NULL;
+	  while ( input_pull == NULL)
+        input_pull = nn_input_pull.nstr_recv();
 
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state

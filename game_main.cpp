@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 
 #include "nn.hpp"
-#include "nanomsg/bus.h"
 #include "nanomsg/pair.h"
 #include "nanomsg/pubsub.h"
 #include "nanomsg/pipeline.h"
@@ -59,7 +58,7 @@ int game_thread( void * _parms ) {
   nn::socket nn_control_socket( AF_SP, NN_PAIR );
   gsockets.nn_control_socket = &nn_control_socket;
   {
-    int ret = gsockets.nn_control_socket->connect( "inproc://control_game" );
+    int ret = gsockets.nn_control_socket->connect( "tcp://*:60206" ); // control_game
     assert( ret == 0 );
   }
 
@@ -71,7 +70,7 @@ int game_thread( void * _parms ) {
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
   gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-    int ret = gsockets.nn_input_mouse_sub->connect( "inproc://input" );
+    int ret = gsockets.nn_input_mouse_sub->connect( "tcp://*:60208" ); // input
     assert ( ret == 0 );
   }
 
@@ -79,14 +78,14 @@ int game_thread( void * _parms ) {
   nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 0 );
   gsockets.nn_input_kb_sub = &nn_input_kb_sub;
   {
-    int ret = gsockets.nn_input_kb_sub->connect( "inproc://input" );
+    int ret = gsockets.nn_input_kb_sub->connect( "tcp://*:60208" ); // input
     assert ( ret == 0 );
   }
 
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   gsockets.nn_input_push = &nn_input_push;
   {
-    int ret = gsockets.nn_input_push->connect( "inproc://input_pull" );
+    int ret = gsockets.nn_input_push->connect( "tcp://*:60209" ); // input_pull
     assert ( ret == 0 );
   }
 

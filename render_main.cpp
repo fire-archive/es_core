@@ -26,9 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "nn.hpp"
-#include "nanomsg/bus.h"
 #include "nanomsg/pipeline.h"
 #include "nanomsg/pair.h"
+#include "nanomsg/pubsub.h"
+#include "nanomsg/ipc.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -61,7 +62,7 @@ int render_thread( void * _parms ) {
 
   nn::socket nn_control_socket( AF_SP, NN_PAIR );
   {
-    int ret = nn_control_socket.connect( "inproc://control_render" );
+    int ret = nn_control_socket.connect( "tcp://*:60207" ); // control_render
     assert( ret == 0 );
   }
 
@@ -77,7 +78,7 @@ int render_thread( void * _parms ) {
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   rsockets.nn_input_push = &nn_input_push;
   {
-    int ret = rsockets.nn_input_push->connect( "inproc://input_pull" );
+	int ret = rsockets.nn_input_push->connect( "tcp://*:60209" ); // input_pull
     assert ( ret == 0 );
   }
 #ifdef __APPLE__

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/pipeline.h"
-#include "nanomsg/pair.h"
+#include "nanomsg/bus.h"
 #include "nanomsg/pubsub.h"
 
 #include "SDL.h"
@@ -59,13 +59,13 @@ int render_thread( void * _parms ) {
   RenderThreadParms * parms = (RenderThreadParms*)_parms;
   RenderThreadSockets rsockets;
 
-  nn::socket nn_control_socket( AF_SP, NN_PAIR );
+  nn::socket nn_control_socket( AF_SP, NN_BUS );
   {
     int ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
     assert( ret == 0 );
   }
 
-  nn::socket nn_game_socket( AF_SP, NN_PAIR );
+  nn::socket nn_game_socket( AF_SP, NN_BUS );
   {
     int ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
     // NOTE: since both render thread and game thread get spun at the same time,

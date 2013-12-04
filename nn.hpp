@@ -234,11 +234,11 @@ namespace nn
         {
             char *buf = NULL;
             const int nbytes = nn_recv(&buf, NN_MSG, flags);
-			if (nbytes < 0) {
-				printf("nn_recv failed: %s\n", nn_strerror(errno));
-				return NULL;
-			}
-			buf[nbytes - 1] = '\0';
+            if (nbytes < 0) {
+                printf("nn_recv failed: %s\n", nn_strerror(errno));
+                return NULL;
+            }
+            buf[nbytes - 1] = '\0';
             return buf;
         }
 

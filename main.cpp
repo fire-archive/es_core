@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/pubsub.h"
-#include "nanomsg/bus.h"
+#include "nanomsg/pair.h"
 #include "nanomsg/pipeline.h"
 
 #include "SDL.h"
@@ -168,10 +168,10 @@ int main( int argc, char *argv[] ) {
 
     // NOTE: since we are driving with SDL, we need to keep the Ogre side updated for window visibility
     ogre_render_window->setVisible( true );
-    nn::socket nn_game_socket(AF_SP, NN_BUS); // Routing
+    nn::socket nn_game_socket(AF_SP, NN_PAIR); // Routing
     nn_game_socket.bind( "tcp://127.0.0.1:60206" ); // control_game
 
-    nn::socket nn_render_socket( AF_SP, NN_BUS ); // Routing
+    nn::socket nn_render_socket( AF_SP, NN_PAIR ); // Routing
     nn_render_socket.bind( "tcp://127.0.0.1:60207" ); // control_render
 
     nn::socket nn_input_pub(AF_SP, NN_PUB); // Topics & Broadcast
@@ -212,11 +212,13 @@ int main( int argc, char *argv[] ) {
     is.pitch = 0.0f;
     is.roll = 0.0f;
     is.orientation_factor = -1.0f; // look around config
-    while ( !shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */ ) {
-      // we wait here
+	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
+	  // we wait here
 	  char * input_pull = NULL;
-	  while ( input_pull == NULL)
-        input_pull = nn_input_pull.nstr_recv();
+	  while (input_pull == NULL) {
+	    input_pull = nn_input_pull.nstr_recv();
+		printf("mouse_state received\n");
+	  }
 
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state

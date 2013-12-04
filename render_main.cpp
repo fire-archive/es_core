@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "nn.hpp"
 #include "nanomsg/pipeline.h"
-#include "nanomsg/bus.h"
+#include "nanomsg/pair.h"
 #include "nanomsg/pubsub.h"
 
 #include "SDL.h"
@@ -59,13 +59,13 @@ int render_thread( void * _parms ) {
   RenderThreadParms * parms = (RenderThreadParms*)_parms;
   RenderThreadSockets rsockets;
 
-  nn::socket nn_control_socket( AF_SP, NN_BUS );
+  nn::socket nn_control_socket( AF_SP, NN_PAIR );
   {
     int ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
     assert( ret == 0 );
   }
 
-  nn::socket nn_game_socket( AF_SP, NN_BUS );
+  nn::socket nn_game_socket( AF_SP, NN_PAIR );
   {
     int ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
     // NOTE: since both render thread and game thread get spun at the same time,
@@ -110,13 +110,14 @@ int render_thread( void * _parms ) {
     char * cmd = nn_control_socket.nstr_recv(NN_DONTWAIT);
 
     if ( cmd != NULL ) {
-      assert( strcmp( cmd, "stop" ) == 0 );
+	  int check = strcmp( cmd, "stop" ) == 0;
+      assert( check );
       free( cmd );
       break; // exit the thread
     }
     while ( true ) {
       // any message from the game thread?
-      char * game_tick = nn_game_socket.nstr_recv(NN_DONTWAIT);
+      char * game_tick = nn_game_socket.nstr_recv();
 
       if ( game_tick == NULL ) {
 	    break;

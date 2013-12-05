@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <random>
+#include <string.h>
 #include "../nn.hpp"
 
 #include "SDL.h"
@@ -85,14 +86,15 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   // get the latest mouse buttons state and orientation
   gsockets.nn_input_push->nstr_send( "mouse_state" );
   printf( "game mouse_state request pushed\n" );
-  char * mouse_state = gsockets.nn_input_mouse_sub->nstr_recv();
-  assert( mouse_state != 0 );
+  char * mouse_state = NULL;
+  gsockets.nn_input_mouse_sub->nstr_recv( &mouse_state );
+  mouse_state = strchr( mouse_state, ':' );
   printf( "%s", mouse_state );
 
   uint8_t buttons;
   Ogre::Quaternion orientation;
   parse_mouse_state( mouse_state, orientation, buttons );
-  free( mouse_state );
+  nn_freemsg( mouse_state );
 
   // at 16 ms tick and the last 10 orientations buffered, that's 150ms worth of orientation history
   gs.orientation_history[ gs.orientation_index ].t = now;

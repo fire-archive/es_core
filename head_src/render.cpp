@@ -172,11 +172,12 @@ void interpolate_and_render( RenderThreadSockets & rsockets, RenderState & rs, f
   if ( rs.mouse_control ) {
     rsockets.nn_input_push->nstr_send( "mouse_state" );
 	printf( "render mouse_state pushed\n" );
-  char * mouse_state = rsockets.nn_input_mouse_sub->nstr_recv();
+  char * mouse_state = NULL;
+  rsockets.nn_input_mouse_sub->nstr_recv(&mouse_state);
 	printf("Render mouse_state sent");
     Ogre::Quaternion orientation;
     parse_mouse_state( mouse_state, orientation );
-    free( mouse_state );
+    nn_freemsg( mouse_state );
     // use latest mouse data to orient the head
     rs.head_node->setOrientation( orientation );
     // update the rotation axis of the head (smoothed over a few frames in the game thread)

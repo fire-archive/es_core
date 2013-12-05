@@ -67,7 +67,7 @@ int game_thread( void * _parms ) {
   gsockets.nn_render_socket->bind( "tcp://127.0.0.1:60210" ); // game_render
 
   nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
-  nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
+  nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 1 );
   gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
     int ret = gsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
@@ -75,7 +75,7 @@ int game_thread( void * _parms ) {
   }
 
   nn::socket nn_input_kb_sub( AF_SP, NN_SUB );
-  nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 0 );
+  nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 1 );
   gsockets.nn_input_kb_sub = &nn_input_kb_sub;
   {
     int ret = gsockets.nn_input_kb_sub->connect( "tcp://127.0.0.1:60208" ); // input
@@ -112,11 +112,12 @@ int game_thread( void * _parms ) {
       printf( "game sleep %d ms\n", ahead );
       SDL_Delay( ahead );
     }
-    char * cmd = gsockets.nn_control_socket->nstr_recv(NN_DONTWAIT);
+    char * cmd = NULL;
+    gsockets.nn_control_socket->nstr_recv(&cmd, NN_DONTWAIT);
 
     if ( cmd != NULL ) {
       assert( strcmp( cmd, "stop" ) == 0 );
-      free( cmd );
+      nn_freemsg( cmd );
       break;
     }
   }

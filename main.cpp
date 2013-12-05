@@ -215,12 +215,7 @@ int main( int argc, char *argv[] ) {
 	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
 	  // we wait here
     char * input_pull = NULL;
-    const int nbytes = nn_input_pull.recv( &input_pull, NN_MSG, 0 );
-    if (nbytes < 0) {
-      printf("nn_recv failed: %s\n", nn_strerror(errno));
-      return -1;
-    }
-    input_pull[nbytes - 1] = '\0';
+    nn_input_pull.nstr_recv( &input_pull, 0 );
 
 	  printf("game push received\n");
 
@@ -365,7 +360,8 @@ void wait_shutdown(SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thr
   // for now, loop the input thread for a bit to flush out any events
   Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
   while ( SDL_GetTicks() < continue_time ) {
-	char * req = nn_input_pub->nstr_recv(NN_DONTWAIT);
+    char * req = NULL;
+    nn_input_pub->nstr_recv(&req, NN_DONTWAIT);
     if ( req != NULL ) {
       delete( req );
     } else {

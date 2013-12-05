@@ -107,21 +107,19 @@ int render_thread( void * _parms ) {
   render_init( parms, rs, srs[0] );
 
   while ( true ) {
-    char * cmd = nn_control_socket.nstr_recv(NN_DONTWAIT);
+    char * cmd = NULL;
+    nn_control_socket.nstr_recv(&cmd, NN_DONTWAIT);
 
     if ( cmd != NULL ) {
 	  int check = strcmp( cmd, "stop" ) == 0;
       assert( check );
-      free( cmd );
+      nn_freemsg( cmd );
       break; // exit the thread
     }
     while ( true ) {
       // any message from the game thread?
-      char * game_tick = nn_game_socket.nstr_recv();
-
-      if ( game_tick == NULL ) {
-	    break;
-      }
+      char * game_tick = NULL;
+      nn_game_socket.nstr_recv(&game_tick);
 
       srs_index ^= 1;
       parse_render_state( rs, srs[ srs_index ], game_tick );

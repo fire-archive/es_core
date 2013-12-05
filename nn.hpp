@@ -229,30 +229,18 @@ namespace nn
             return rc;
         }
 
-        /* Get C string. Returns NULL if there is an error. Must free with nn_free() when finished */
-        inline char * nstr_recv (int flags = 0)
+        /* Get C string. Returns 0 if it succeeds, returns -1 if there is an error. Must free with nn_freemsg() when finished */
+        inline int nstr_recv(char **buf, int flags = 0)
         {
-            char *buf = NULL;
-            const int nbytes = nn_recv(s, &buf, NN_MSG, flags);
+            const int nbytes = nn_recv(s, *&buf, NN_MSG, flags);
             if (nbytes < 0) {
                 printf("nn_recv failed: %s\n", nn_strerror(errno));
-                return NULL;
+                return -1;
             }
-            buf[nbytes - 1] = '\0';
-            return buf;
+            *buf[nbytes - 1] = '\0';
+            return 0;
         }
 
-        inline char * nstr_recv_new(int flags = 0)
-        {
-          char *buf = NULL;
-          const int nbytes = nn_recv(s, &buf, NN_MSG, flags);
-          if (nbytes < 0) {
-            printf("nn_recv failed: %s\n", nn_strerror(errno));
-            return NULL;
-          }
-          buf[nbytes - 1] = '\0';
-          return buf;
-        }
     private:
 
         int s;

@@ -214,11 +214,15 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
 	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
 	  // we wait here
-	  char * input_pull = NULL;
-	  while (input_pull == NULL) {
-	    input_pull = nn_input_pull.nstr_recv();
-		printf("mouse_state received\n");
-	  }
+    char * input_pull = NULL;
+    const int nbytes = nn_input_pull.recv( &input_pull, NN_MSG, 0 );
+    if (nbytes < 0) {
+      printf("nn_recv failed: %s\n", nn_strerror(errno));
+      return -1;
+    }
+    input_pull[nbytes - 1] = '\0';
+
+	  printf("game push received\n");
 
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state
@@ -236,6 +240,7 @@ int main( int argc, char *argv[] ) {
         } else if ( event.type == SDL_MOUSEMOTION ) {
           SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
           // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+
           is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
           if ( is.yaw >= 0.0f ) {
             is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
@@ -272,6 +277,7 @@ int main( int argc, char *argv[] ) {
         int x, y;
         Uint8 buttons = SDL_GetMouseState( &x, &y );
         nn_input_pub.nstr_send( "input.mouse:%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+	    	printf("input.mouse sent\n");
 
       } else if ( strcmp( input_pull, "kb_state" ) == 0 ) {
         // looking at a few hardcoded keys for now
@@ -299,7 +305,7 @@ int main( int argc, char *argv[] ) {
           is.orientation_factor = -1.0f;
         }
       }
-      free( input_pull );
+      nn_freemsg( input_pull );
     }
 
     if ( !shutdown_requested ) {

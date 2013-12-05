@@ -126,7 +126,7 @@ int render_thread( void * _parms ) {
       srs_index ^= 1;
       parse_render_state( rs, srs[ srs_index ], game_tick );
 
-      free( game_tick );
+      nn_freemsg( game_tick );
     }
 
     // skip rendering until enough data has come in to support interpolation

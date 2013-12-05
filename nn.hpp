@@ -233,7 +233,7 @@ namespace nn
         inline char * nstr_recv (int flags = 0)
         {
             char *buf = NULL;
-            const int nbytes = nn_recv(&buf, NN_MSG, flags);
+            const int nbytes = nn_recv(s, &buf, NN_MSG, flags);
             if (nbytes < 0) {
                 printf("nn_recv failed: %s\n", nn_strerror(errno));
                 return NULL;
@@ -242,6 +242,17 @@ namespace nn
             return buf;
         }
 
+        inline char * nstr_recv_new(int flags = 0)
+        {
+          char *buf = NULL;
+          const int nbytes = nn_recv(s, &buf, NN_MSG, flags);
+          if (nbytes < 0) {
+            printf("nn_recv failed: %s\n", nn_strerror(errno));
+            return NULL;
+          }
+          buf[nbytes - 1] = '\0';
+          return buf;
+        }
     private:
 
         int s;

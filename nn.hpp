@@ -222,8 +222,8 @@ namespace nn
             char *string = s_vprintf (format, argptr);
             va_end (argptr);
 
-            void *msg = nn_allocmsg(strlen(string + 1), 0);
-            strncpy((char *)msg, string, strlen(string + 1));
+            void *msg = nn_allocmsg(strlen(string) + 1, 0);
+            strncpy((char *)msg, string, strlen(string) + 1);
             int rc = send(&msg, NN_MSG, 0);
 
             return rc;

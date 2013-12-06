@@ -14,7 +14,7 @@
     },
     "target_defaults": {
         "default_configuration": "Release",
-        "PRODUCT_DIR": "./Run/bin",
+        "product_dir": "Run/bin",
         "defines": [
         ],
         "conditions": [

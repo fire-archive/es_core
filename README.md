@@ -40,7 +40,13 @@ If you compile for GNU/Linux or MacOS X, you will need scons: http://scons.org/
 Windows
 -------
 
-Use the Visual Studio 2012 project files (MSVC Express will work)
+Use the cmake and Visual Studio 2013
+
+```
+mkdir Build
+cd Build
+cmake -G "Visual Studio 12" -DCMAKE_INSTALL_PREFIX=./Run ..
+```
 
 MacOS X
 -------

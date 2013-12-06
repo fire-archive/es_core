@@ -26,8 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "nn.hpp"
+#include "nanomsg/pipeline.h"
 #include "nanomsg/bus.h"
-#include "nanomsg/reqrep.h"
+#include "nanomsg/pubsub.h"
 
 #include "SDL.h"
 #include "SDL_thread.h"
@@ -60,25 +61,34 @@ int render_thread( void * _parms ) {
 
   nn::socket nn_control_socket( AF_SP, NN_BUS );
   {
-    int ret = nn_control_socket.connect( "inproc://control_render" );
+    int ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
     assert( ret == 0 );
   }
 
   nn::socket nn_game_socket( AF_SP, NN_BUS );
   {
-    int ret = nn_game_socket.connect( "inproc://game_render" );
+    int ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
     // NOTE: since both render thread and game thread get spun at the same time,
     // and the connect needs to happen after the bind,
     // it's possible this would fail on occasion? just loop a few times and retry?
     assert ( ret == 0 );
   }
 
-  nn::socket nn_input_req( AF_SP, NN_REQ );
-  rsockets.nn_input_req = &nn_input_req;
+  nn::socket nn_input_push( AF_SP, NN_PUSH );
+  rsockets.nn_input_push = &nn_input_push;
   {
-    int ret = rsockets.nn_input_req->connect( "inproc://input" );
+	int ret = rsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
     assert ( ret == 0 );
   }
+
+  nn::socket nn_input_mouse_sub( AF_SP, NN_SUB );  
+  nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
+  rsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
+  {
+	int ret = rsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
+	  assert(ret == 0);
+  }
+
 #ifdef __APPLE__
   OSX_GL_set_current( parms->ogre_window );
 #else
@@ -97,25 +107,27 @@ int render_thread( void * _parms ) {
   render_init( parms, rs, srs[0] );
 
   while ( true ) {
-    char * cmd = nn_control_socket.nstr_recv(NN_DONTWAIT);
+    char * cmd = NULL;
+    nn_control_socket.nstr_recv(&cmd, NN_DONTWAIT);
 
     if ( cmd != NULL ) {
-      assert( strcmp( cmd, "stop" ) == 0 );
-      free( cmd );
+	  int check = strcmp( cmd, "stop" ) == 0;
+      assert( check );
+      nn_freemsg( cmd );
       break; // exit the thread
     }
     while ( true ) {
       // any message from the game thread?
-      char * game_tick = nn_game_socket.nstr_recv(NN_DONTWAIT);
+      char * game_tick = NULL;
+      nn_game_socket.nstr_recv(&game_tick, NN_DONTWAIT);
 
-      if ( game_tick == NULL ) {
-	    break;
-      }
+      if ( game_tick == NULL )
+        break;
 
       srs_index ^= 1;
       parse_render_state( rs, srs[ srs_index ], game_tick );
 
-      free( game_tick );
+      nn_freemsg( game_tick );
     }
 
     // skip rendering until enough data has come in to support interpolation

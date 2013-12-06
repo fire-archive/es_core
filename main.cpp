@@ -26,9 +26,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "nn.hpp"
-#include "nanomsg/inproc.h"
+#include "nanomsg/pubsub.h"
 #include "nanomsg/bus.h"
-#include "nanomsg/reqrep.h"
+#include "nanomsg/pipeline.h"
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -120,7 +120,6 @@ int main( int argc, char *argv[] ) {
   }
 
   try {
-
     Ogre::Root * ogre_root = new Ogre::Root();
 #ifdef __WINDOWS__
 #ifdef _DEBUG
@@ -170,13 +169,17 @@ int main( int argc, char *argv[] ) {
     // NOTE: since we are driving with SDL, we need to keep the Ogre side updated for window visibility
     ogre_render_window->setVisible( true );
     nn::socket nn_game_socket(AF_SP, NN_BUS); // Routing
-    nn_game_socket.bind("inproc://control_game");
+    nn_game_socket.bind( "tcp://127.0.0.1:60206" ); // control_game
 
-    nn::socket nn_render_socket(AF_SP, NN_BUS); // Routing
-    nn_render_socket.bind("inproc://control_render");
+    nn::socket nn_render_socket( AF_SP, NN_BUS ); // Routing
+    nn_render_socket.bind( "tcp://127.0.0.1:60207" ); // control_render
 
-    nn::socket nn_input_rep(AF_SP, NN_REP); // I ask, you answer
-    nn_input_rep.bind("inproc://input");
+    nn::socket nn_input_pub(AF_SP, NN_PUB); // Topics & Broadcast
+    nn_input_pub.bind( "tcp://127.0.0.1:60208" ); // input
+    
+    nn::socket nn_input_pull(AF_SP, NN_PULL); // A One-Way Pipe
+    nn_input_pull.bind( "tcp://127.0.0.1:60209" ); // input_pull
+
     GameThreadParms game_thread_parms;
 
     SDL_Thread * sdl_game_thread = SDL_CreateThread( game_thread, "game", &game_thread_parms );
@@ -209,9 +212,12 @@ int main( int argc, char *argv[] ) {
     is.pitch = 0.0f;
     is.roll = 0.0f;
     is.orientation_factor = -1.0f; // look around config
-    while ( !shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */ ) {
-      // we wait here
-      char * input_request = nn_input_rep.nstr_recv();
+	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
+	  // we wait here
+    char * input_pull = NULL;
+    nn_input_pull.nstr_recv( &input_pull );
+
+	  printf("game push received\n");
 
       // poll for events before processing the request
       // NOTE: this is how SDL builds the internal mouse and keyboard state
@@ -229,6 +235,7 @@ int main( int argc, char *argv[] ) {
         } else if ( event.type == SDL_MOUSEMOTION ) {
           SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
           // + when manipulating an object, - when doing a first person view .. needs to be configurable?
+
           is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
           if ( is.yaw >= 0.0f ) {
             is.yaw = fmod( is.yaw + 180.0f, 360.0f ) - 180.0f;
@@ -260,19 +267,21 @@ int main( int argc, char *argv[] ) {
         }
       }
       // we are ready to process the request now
-      if ( strcmp( input_request, "mouse_state" ) == 0 ) {
+      if ( strcmp( input_pull, "mouse_state" ) == 0 ) {
+        // Example: input.kb: will only match the one type of message. input.kb would also match input.kb.gamepad:, for instance
         int x, y;
         Uint8 buttons = SDL_GetMouseState( &x, &y );
-        nn_input_rep.nstr_send( "%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+        nn_input_pub.nstr_send( "input.mouse:%f %f %f %f %d", is.orientation.w, is.orientation.x, is.orientation.y, is.orientation.z, buttons );
+	    	printf("input.mouse sent\n");
 
-      } else if ( strcmp( input_request, "kb_state" ) == 0 ) {
+      } else if ( strcmp( input_pull, "kb_state" ) == 0 ) {
         // looking at a few hardcoded keys for now
         // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
         const Uint8 *state = SDL_GetKeyboardState(NULL);
-        nn_input_rep.nstr_send( "%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
-      } else if ( strncmp( input_request, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
+        nn_input_pub.nstr_send( "input.kb:%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
+      } else if ( strncmp( input_pull, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
         // reset the orientation
-        parse_orientation( input_request + strlen( "mouse_reset" ) + 1, is.orientation );
+        parse_orientation( input_pull + strlen( "mouse_reset" ) + 1, is.orientation );
 
         Ogre::Matrix3 r;
         is.orientation.ToRotationMatrix( r );
@@ -282,27 +291,23 @@ int main( int argc, char *argv[] ) {
         is.pitch = rfPAngle.valueDegrees();
         is.roll = rfRAngle.valueDegrees();
 
-        nn_input_rep.nstr_send( "" ); // nop (acknowledge)
-      } else if ( strncmp( input_request, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
-        if ( atoi( input_request + strlen( "config_look_around" ) + 1 ) == 0 ) {
+      } else if ( strncmp( input_pull, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
+        if ( atoi( input_pull + strlen( "config_look_around" ) + 1 ) == 0 ) {
           printf( "input configuration: manipulate object\n" );
           is.orientation_factor = 1.0f;
         } else {
           printf( "input configuration: look around\n" );
           is.orientation_factor = -1.0f;
         }
-        nn_input_rep.nstr_send( "" ); // nop
-      } else {
-        nn_input_rep.nstr_send( "" ); //nop
       }
-      free( input_request );
+      nn_freemsg( input_pull );
     }
 
     if ( !shutdown_requested ) {
       send_shutdown( &nn_render_socket, &nn_game_socket);
       shutdown_requested = true;
     }
-    wait_shutdown( sdl_render_thread, sdl_game_thread, &nn_input_rep);
+    wait_shutdown( sdl_render_thread, sdl_game_thread, &nn_input_pub);
     // make the GL context again before proceeding with the teardown
 #ifdef __APPLE__
     OSX_GL_set_current( ogre_render_window );
@@ -346,7 +351,7 @@ void send_shutdown( nn::socket * nn_render_socket, nn::socket * nn_game_socket )
   nn_game_socket->nstr_send( "stop" );
 }
 
-void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, nn::socket * nn_input_rep ) {
+void wait_shutdown(SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thread, nn::socket * nn_input_pub) {
   // there is no timeout support in SDL_WaitThread, so we can only call it once we're sure the thread is going to finish
   // the threads may do a few polls against the input thread before actually shutting down
   // TODO: I'd like to come up with a more robust design:
@@ -355,12 +360,10 @@ void wait_shutdown( SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_th
   // for now, loop the input thread for a bit to flush out any events
   Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
   while ( SDL_GetTicks() < continue_time ) {
-    char * req = nn_input_rep->nstr_recv(NN_DONTWAIT);
+    char * req = NULL;
+    nn_input_pub->nstr_recv(&req, NN_DONTWAIT);
     if ( req != NULL ) {
       delete( req );
-      // send a nop - that's assuming that all the code interacting with the input socket knows how to handle an empty response,
-      // which isn't the case, so the parsing code might crash .. still better than a hang
-      nn_input_rep->nstr_send( "" );
     } else {
       SDL_Delay( 10 );
     }

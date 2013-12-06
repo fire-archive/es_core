@@ -222,24 +222,22 @@ namespace nn
             char *string = s_vprintf (format, argptr);
             va_end (argptr);
 
-            void *msg = nn_allocmsg(sizeof(string), 0);
-            strncpy((char *)msg, string, sizeof(string));
+            void *msg = nn_allocmsg(strlen(string) + 1, 0);
+            strncpy((char *)msg, string, strlen(string) + 1);
             int rc = send(&msg, NN_MSG, 0);
 
             return rc;
         }
 
-        /* Get C string. Returns NULL if there is an error. */
-        inline char * nstr_recv (int flags = 0)
+        /* Get C string. Returns number of bytes if it succeeds, returns -1 if there is an error. Must free with nn_freemsg() when finished */
+        inline int nstr_recv(char **buf, int flags = 0)
         {
-            void *buf = NULL;
-            const int nbytes = recv(&buf, NN_MSG, flags);
-            if(nbytes < 0)
-                return NULL;
-            char *string = (char *) malloc(nbytes + 1);
-            memcpy(string, &buf, nbytes);
-            nn_freemsg(buf);
-            return string;
+            const int nbytes = nn_recv(s, *&buf, NN_MSG, flags);
+            if (nbytes < 0 && flags != NN_DONTWAIT) {
+                printf("nn_recv failed: %s\n", nn_strerror(errno));
+                return -1;
+            }
+            return nbytes;
         }
 
     private:

@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <random>
+#include <string.h>
 #include "../nn.hpp"
 
 #include "SDL.h"
@@ -65,8 +66,10 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   std::mt19937 rng;
   rng.seed( (unsigned long)now );
   gs.bounce = 25.0f;
-  gs.speed = (float)( rand() % 60 + 40 );
-  float angle = (float)( rand() % 360 ) * 2.0f * (float)M_PI / 360.0f;
+  std::uniform_real_distribution<float> rand_speed(1, 60);
+  gs.speed = rand_speed(rng) + 40;
+  std::uniform_real_distribution<> rand_angle(1, 360);
+  float angle = Ogre::Math::AngleUnitsToRadians(rand_angle(rng));
   gs.direction = Ogre::Vector2( cosf( angle ), sinf( angle ) );
   rs.orientation = Ogre::Quaternion( Ogre::Radian( 0.0f ), Ogre::Vector3::UNIT_Z );
   rs.position = Ogre::Vector3::ZERO;
@@ -76,16 +79,23 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   gs.orientation_index = 0;
   memset( gs.orientation_history, 0, sizeof( gs.orientation_history ) );
   // set the input code to manipulate an object rather than look around
-  gsockets.nn_input_req->nstr_send( "config_look_around 0" );
-  char * foo = gsockets.nn_input_req->nstr_recv();
-  free( foo );
+  gsockets.nn_input_push->send( "config_look_around 0", strlen("config_look_around 0") + 1, 0);
 }
 
 void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & srs, unsigned int now ) {
   // get the latest mouse buttons state and orientation
-  gsockets.nn_input_req->nstr_send( "mouse_state" );
-  char * mouse_state = gsockets.nn_input_req->nstr_recv();
-  
+  gsockets.nn_input_push->nstr_send( "mouse_state" );
+  printf( "game mouse_state request pushed\n" );
+  char * tmp = NULL;
+  gsockets.nn_input_mouse_sub->nstr_recv( &tmp );
+  char * start = tmp;
+  char * end = strchr( start, ':' );
+  char * mouse_state = (char *) malloc( strlen(tmp + 1) );
+  strcpy(mouse_state, end + 1);
+  nn_freemsg( tmp );
+
+  // printf( "%s\n", mouse_state );
+
   uint8_t buttons;
   Ogre::Quaternion orientation;
   parse_mouse_state( mouse_state, orientation, buttons );
@@ -116,8 +126,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       // changing the control scheme: the player is now driving the orientation of the head directly with the mouse
       // tell the input logic to reset the orientation to match the current orientation of the head
 
-      gsockets.nn_input_req->nstr_send( "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
-      gsockets.nn_input_req->nstr_recv();
+      gsockets.nn_input_push->nstr_send( "mouse_reset %f %f %f %f", srs.orientation.w, srs.orientation.x, srs.orientation.y, srs.orientation.z );
 
       // IF RENDER TICK HAPPENS HERE: render will not know that it should grab the orientation directly from the mouse,
       // but the orientation coming from game should still be ok?

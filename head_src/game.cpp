@@ -79,7 +79,7 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   gs.orientation_index = 0;
   memset( gs.orientation_history, 0, sizeof( gs.orientation_history ) );
   // set the input code to manipulate an object rather than look around
-  gsockets.nn_input_push->send( "config_look_around 0", strlen("config_look_around 0") + 1, 0);
+  gsockets.nn_input_push->nstr_send( "config_look_around 0" );
 }
 
 void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState & srs, unsigned int now ) {

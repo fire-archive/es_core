@@ -290,7 +290,6 @@ int main( int argc, char *argv[] ) {
         is.yaw = rfYAngle.valueDegrees();
         is.pitch = rfPAngle.valueDegrees();
         is.roll = rfRAngle.valueDegrees();
-
       } else if ( strncmp( input_pull, "config_look_around", strlen( "config_look_around" ) ) == 0 ) {
         if ( atoi( input_pull + strlen( "config_look_around" ) + 1 ) == 0 ) {
           printf( "input configuration: manipulate object\n" );

@@ -17,6 +17,14 @@
         "product_dir": "Run/bin",
         "defines": [
         ],
+        'copies': [
+          {
+            'destination': 'Run/bin/media/',
+            'files': [
+              'binaries/',
+            ],
+          },
+        ],
         "conditions": [
             [
                 'OS == "win"',

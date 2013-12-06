@@ -19,7 +19,7 @@
         ],
         'copies': [
           {
-            'destination': 'Run/bin/media/',
+            'destination': '../Run/bin/',
             'files': [
               'binaries/media/',
             ],

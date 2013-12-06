@@ -14,13 +14,12 @@
     },
     "target_defaults": {
         "default_configuration": "Release",
-"       "PRODUCT_DIR": "./Run/bin",
+        "PRODUCT_DIR": "./Run/bin",
         "defines": [
-
         ],
         "conditions": [
             [
-                "OS == 'windows'",
+                'OS == "win"',
                 {
                     "libraries": [
                         "imm32.lib",
@@ -28,7 +27,9 @@
                         "version.lib",
                     ]
                 }
-                "OS == 'mac'",
+            ],
+            [
+                'OS == "mac"',
                 {
                     "defines": [
                         "DARWIN"

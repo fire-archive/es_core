@@ -21,7 +21,7 @@
           {
             'destination': 'Run/bin/media/',
             'files': [
-              'binaries/',
+              'binaries/media/',
             ],
           },
         ],

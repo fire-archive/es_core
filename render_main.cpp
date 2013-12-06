@@ -119,7 +119,10 @@ int render_thread( void * _parms ) {
     while ( true ) {
       // any message from the game thread?
       char * game_tick = NULL;
-      nn_game_socket.nstr_recv(&game_tick);
+      nn_game_socket.nstr_recv(&game_tick, NN_DONTWAIT);
+
+      if ( game_tick == NULL )
+        break;
 
       srs_index ^= 1;
       parse_render_state( rs, srs[ srs_index ], game_tick );

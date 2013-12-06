@@ -215,7 +215,7 @@ int main( int argc, char *argv[] ) {
 	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
 	  // we wait here
     char * input_pull = NULL;
-    nn_input_pull.nstr_recv( &input_pull, 0 );
+    nn_input_pull.nstr_recv( &input_pull );
 
 	  printf("game push received\n");
 

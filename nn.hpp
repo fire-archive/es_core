@@ -229,16 +229,15 @@ namespace nn
             return rc;
         }
 
-        /* Get C string. Returns 0 if it succeeds, returns -1 if there is an error. Must free with nn_freemsg() when finished */
+        /* Get C string. Returns number of bytes if it succeeds, returns -1 if there is an error. Must free with nn_freemsg() when finished */
         inline int nstr_recv(char **buf, int flags = 0)
         {
             const int nbytes = nn_recv(s, *&buf, NN_MSG, flags);
-            if (nbytes < 0) {
+            if (nbytes < 0 && flags != NN_DONTWAIT) {
                 printf("nn_recv failed: %s\n", nn_strerror(errno));
                 return -1;
             }
-            *buf[nbytes - 1] = '\0';
-            return 0;
+            return nbytes;
         }
 
     private:

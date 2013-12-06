@@ -66,7 +66,7 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   std::mt19937 rng;
   rng.seed( (unsigned long)now );
   gs.bounce = 25.0f;
-  std::uniform_real_distribution<> rand_speed(1, 60);
+  std::uniform_real_distribution<float> rand_speed(1, 60);
   gs.speed = rand_speed(rng) + 40;
   std::uniform_real_distribution<> rand_angle(1, 360);
   float angle = Ogre::Math::AngleUnitsToRadians(rand_angle(rng));
@@ -86,15 +86,20 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   // get the latest mouse buttons state and orientation
   gsockets.nn_input_push->nstr_send( "mouse_state" );
   printf( "game mouse_state request pushed\n" );
-  char * mouse_state = NULL;
-  gsockets.nn_input_mouse_sub->nstr_recv( &mouse_state );
-  mouse_state = strchr( mouse_state, ':' );
-  printf( "%s", mouse_state );
+  char * tmp = NULL;
+  gsockets.nn_input_mouse_sub->nstr_recv( &tmp );
+  char * start = tmp;
+  char * end = strchr( start, ':' );
+  char * mouse_state = (char *) malloc( strlen(tmp + 1) );
+  strcpy(mouse_state, end + 1);
+  nn_freemsg( tmp );
+
+  // printf( "%s\n", mouse_state );
 
   uint8_t buttons;
   Ogre::Quaternion orientation;
   parse_mouse_state( mouse_state, orientation, buttons );
-  nn_freemsg( mouse_state );
+  free( mouse_state );
 
   // at 16 ms tick and the last 10 orientations buffered, that's 150ms worth of orientation history
   gs.orientation_history[ gs.orientation_index ].t = now;

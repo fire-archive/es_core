@@ -11,9 +11,9 @@ Please read http://ttimo.typepad.com/blog/2013/05/es_core-an-experimental-framew
 Architecture
 ============
 
-Each logical part of the framework executes in it's own thread. The input thread (main.cpp, also doing the initialization), the game thread (game.cpp) and the renderer thread (render.cpp). The threads communicate with each other using a lightweight messaging system, backed by ZeroMQ.
+Each logical part of the framework executes in it's own thread. The input thread (main.cpp, also doing the initialization), the game thread (game.cpp) and the renderer thread (render.cpp). The threads communicate with each other using a lightweight messaging system, backed by Nanomsg.
 
-ZeroMQ provides a safe and efficient abstraction for thread communication. For more details, see 'Multithreaded Magic with 0MQ' [1]. This design also enables easy support for other languages in the future.
+Nanomsg provides a safe and efficient abstraction for thread communication. For more details, see the similiar 'Multithreaded Magic with 0MQ' [1]. This design also enables easy support for other languages in the future.
 
 The game thread runs on a fixed tick and feeds an interpolating renderer locked at the display refresh speed. On each tick, the game thread updates it's internal state and produces a new render state for the renderer to interpolate towards. For more details on this approach, see 'Fix your timestep!' by Glenn Fiedler [2].
 
@@ -29,13 +29,10 @@ Compile
 You will need to obtain and compile the following dependencies:
 
 - SDL 2.0: http://www.libsdl.org/hg.php
-- Ogre 1.8: http://www.ogre3d.org/developers/mercurial
-- libzmq: https://github.com/zeromq/libzmq
-- czmq: https://github.com/zeromq/czmq
+- Ogre 1.9: http://www.ogre3d.org/developers/mercurial
+- Nanomsg: https://github.com/nanomsg/nanomsg
 
-At the time of writing, SDL 2.0 is only available from Mercurial, and Ogre 1.9 RC1 was just released but this code was not updated and still uses 1.8.
-
-If you compile for GNU/Linux or MacOS X, you will need scons: http://scons.org/
+At the time of writing, SDL 2.0 is only available from Mercurial, and works with Ogre 1.9.
 
 Windows
 -------

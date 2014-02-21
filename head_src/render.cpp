@@ -33,6 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OgreRenderWindow.h"
 #include "OgreViewport.h"
 #include "OgreEntity.h"
+#include <OgreCamera.h>
+#include <OgreSceneNode.h>
 #include "OgreManualObject.h"
 
 #include "../render_main.h"

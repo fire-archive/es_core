@@ -174,7 +174,7 @@ void interpolate_and_render( RenderThreadSockets & rsockets, RenderState & rs, f
   if ( rs.mouse_control ) {
     rsockets.nn_input_push->nstr_send( "mouse_state" );
 	printf( "Render mouse_state requested\n" );
-  char * mouse_state = NULL;
+  char * mouse_state = nullptr;
   rsockets.nn_input_mouse_sub->nstr_recv(&mouse_state);
 	printf("Render mouse_state received\n");
     Ogre::Quaternion orientation;

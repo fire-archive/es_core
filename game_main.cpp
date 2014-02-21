@@ -112,10 +112,10 @@ int game_thread( void * _parms ) {
       printf( "game sleep %d ms\n", ahead );
       SDL_Delay( ahead );
     }
-    char * cmd = NULL;
+    char * cmd = nullptr;
     gsockets.nn_control_socket->nstr_recv(&cmd, NN_DONTWAIT);
 
-    if ( cmd != NULL ) {
+    if ( cmd != nullptr ) {
       assert( strcmp( cmd, "stop" ) == 0 );
       nn_freemsg( cmd );
       break;

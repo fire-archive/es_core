@@ -107,10 +107,10 @@ int render_thread( void * _parms ) {
   render_init( parms, rs, srs[0] );
 
   while ( true ) {
-    char * cmd = NULL;
+    char * cmd = nullptr;
     nn_control_socket.nstr_recv(&cmd, NN_DONTWAIT);
 
-    if ( cmd != NULL ) {
+	if (cmd != nullptr) {
 	  int check = strcmp( cmd, "stop" ) == 0;
       assert( check );
       nn_freemsg( cmd );
@@ -118,10 +118,10 @@ int render_thread( void * _parms ) {
     }
     while ( true ) {
       // any message from the game thread?
-      char * game_tick = NULL;
+	  char * game_tick = nullptr;
       nn_game_socket.nstr_recv(&game_tick, NN_DONTWAIT);
 
-      if ( game_tick == NULL )
+	  if ( game_tick == nullptr )
         break;
 
       srs_index ^= 1;
@@ -143,8 +143,8 @@ int render_thread( void * _parms ) {
     parms->root->_fireFrameStarted();
     parms->root->renderOneFrame();
     parms->root->_fireFrameRenderingQueued();
-    if ( parms->gl_context != NULL ) {
-      // glcontext != NULL <=> SDL initialized the GL context and manages the buffer swaps
+    if ( parms->gl_context != nullptr ) {
+      // glcontext != nullptr <=> SDL initialized the GL context and manages the buffer swaps
       SDL_GL_SwapWindow( parms->window );
     }
     parms->root->_fireFrameEnded();

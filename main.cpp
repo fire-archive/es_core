@@ -196,7 +196,7 @@ int main( int argc, char *argv[] ) {
     OSX_GL_clear_current( ogre_render_window );
 #else
     // NOTE: don't call this on OSX, since SDL isn't managing the context!
-    SDL_GL_MakeCurrent( window, NULL );
+    SDL_GL_MakeCurrent( window, nullptr );
 #endif
     SDL_Thread * sdl_render_thread = SDL_CreateThread( render_thread, "render", &render_thread_parms );
 
@@ -214,7 +214,7 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
 	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
 	  // we wait here
-    auto input_pull = NULL;
+		char * input_pull = nullptr;
     nn_input_pull.nstr_recv( &input_pull );
 
 	  printf("game push received\n");
@@ -359,9 +359,9 @@ void wait_shutdown(SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thr
   // for now, loop the input thread for a bit to flush out any events
   Uint32 continue_time = SDL_GetTicks() + 500; // an eternity
   while ( SDL_GetTicks() < continue_time ) {
-    char * req = NULL;
+    char * req = nullptr;
     nn_input_pub->nstr_recv(&req, NN_DONTWAIT);
-    if ( req != NULL ) {
+    if ( req != nullptr ) {
       delete( req );
     } else {
       SDL_Delay( 10 );
@@ -371,12 +371,12 @@ void wait_shutdown(SDL_Thread * & sdl_render_thread, SDL_Thread * & sdl_game_thr
     int status;
     SDL_WaitThread( sdl_render_thread, &status );
     printf( "render thread has stopped, status: %d\n", status );
-    sdl_render_thread = NULL;
+    sdl_render_thread = nullptr;
   }
   {
     int status;
     SDL_WaitThread( sdl_game_thread, &status );
     printf( "game thread has stopped, status: %d\n", status );
-    sdl_game_thread = NULL;
+    sdl_game_thread = nullptr;
   }
 }

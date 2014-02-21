@@ -86,7 +86,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   // get the latest mouse buttons state and orientation
   gsockets.nn_input_push->nstr_send( "mouse_state" );
   printf( "game mouse_state request pushed\n" );
-  char * tmp = NULL;
+  char * tmp = nullptr;
   gsockets.nn_input_mouse_sub->nstr_recv( &tmp );
   auto start = tmp;
   auto end = strchr( start, ':' );

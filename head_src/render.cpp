@@ -63,8 +63,8 @@ void parse_mouse_state( char * mouse_state, Ogre::Quaternion & orientation ) {
 }
 
 void _parse_render_state( char * render_state, unsigned int & tick_time, float & x, float & y, Ogre::Quaternion & orientation, Ogre::Vector3 & smoothed_angular ) {
-  char * start = render_state;
-  char * end = strchr( start, ' ' );
+  auto start = render_state;
+  auto end = strchr( start, ' ' );
   end[0] = '\0';
   tick_time = atoi( start );
   start = end + 1;
@@ -107,7 +107,7 @@ void render_init( RenderThreadParms * parms, RenderState & rs, SharedRenderState
   rs.mouse_control = false;
 
   // create a test scene
-  Ogre::ResourceGroupManager &mgr = Ogre::ResourceGroupManager::getSingleton();
+  auto &mgr = Ogre::ResourceGroupManager::getSingleton();
 
   mgr.addResourceLocation( "media/models", "FileSystem", "General" );
   mgr.addResourceLocation( "media/materials/scripts", "FileSystem", "General" );
@@ -116,21 +116,21 @@ void render_init( RenderThreadParms * parms, RenderState & rs, SharedRenderState
 
   mgr.initialiseAllResourceGroups();
     
-  Ogre::SceneManager * scene = parms->root->createSceneManager( Ogre::ST_GENERIC, "SimpleStaticCheck" );
+  auto scene = parms->root->createSceneManager( Ogre::ST_GENERIC, "SimpleStaticCheck" );
   scene->setAmbientLight( Ogre::ColourValue( 0.5f, 0.5f, 0.5f ) );
-  Ogre::Entity * head = scene->createEntity( "head", "ogrehead.mesh" );
+  auto head = scene->createEntity( "head", "ogrehead.mesh" );
   rs.head_node = scene->getRootSceneNode()->createChildSceneNode( "head_node" );
   rs.head_node->attachObject( head );
 
-  Ogre::Light * light = scene->createLight( "light" );
+  auto light = scene->createLight( "light" );
   light->setPosition( 20.0f, 80.0f, 50.0f );
   
-  Ogre::Camera * camera = scene->createCamera( "cam" );
+  auto camera = scene->createCamera( "cam" );
   camera->setPosition( Ogre::Vector3( 0, 0, 90 ) );
   camera->lookAt( Ogre::Vector3( 0, 0, -300 ) );
   camera->setNearClipDistance( 5 );
   
-  Ogre::Viewport * viewport = parms->ogre_window->addViewport( camera );
+  auto viewport = parms->ogre_window->addViewport( camera );
   viewport->setBackgroundColour( Ogre::ColourValue( 0, 0, 0 ) );
   camera->setAspectRatio( Ogre::Real( viewport->getActualWidth() ) / Ogre::Real( viewport->getActualHeight() ) );
 
@@ -185,8 +185,8 @@ void interpolate_and_render( RenderThreadSockets & rsockets, RenderState & rs, f
     // update the rotation axis of the head (smoothed over a few frames in the game thread)
     rs.rotation_vector_obj->beginUpdate( 0 );
     rs.rotation_vector_obj->position( interp_position );
-    Ogre::Vector3 interp_smoothed_angular = ( 1.0f - ratio ) * previous_render.smoothed_angular + ratio * next_render.smoothed_angular;
-    Ogre::Vector3 rotation_vector_end = interp_position + 40.0f * interp_smoothed_angular;
+    auto interp_smoothed_angular = ( 1.0f - ratio ) * previous_render.smoothed_angular + ratio * next_render.smoothed_angular;
+    auto rotation_vector_end = interp_position + 40.0f * interp_smoothed_angular;
     rs.rotation_vector_obj->position( rotation_vector_end );
     rs.rotation_vector_obj->end();
   } else {

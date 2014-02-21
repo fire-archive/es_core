@@ -92,7 +92,7 @@ int main( int argc, char *argv[] ) {
 #endif
 
   SDL_Init( SDL_INIT_EVERYTHING );
-  SDL_Window * window = SDL_CreateWindow(
+  auto window = SDL_CreateWindow(
                      "es_core::SDL",
                      SDL_WINDOWPOS_UNDEFINED,
                      SDL_WINDOWPOS_UNDEFINED,
@@ -120,7 +120,7 @@ int main( int argc, char *argv[] ) {
   }
 
   try {
-    Ogre::Root * ogre_root = new Ogre::Root();
+    auto ogre_root = new Ogre::Root();
 #ifdef __WINDOWS__
 #ifdef _DEBUG
     ogre_root->loadPlugin( "RenderSystem_GL_d" );
@@ -156,7 +156,7 @@ int main( int argc, char *argv[] ) {
     params["macAPI"] = "cocoa";
     params["macAPICocoaUseNSView"] = "true";
 #endif
-    Ogre::RenderWindow * ogre_render_window = ogre_root->createRenderWindow( "Legion::core::ogre", 800, 600, false, &params );
+    auto ogre_render_window = ogre_root->createRenderWindow( "Legion::core::ogre", 800, 600, false, &params );
 #ifdef __APPLE__
     // I suspect triple buffering is on by default, which makes vsync pointless?
     // except maybe for poorly implemented render loops which will then be forced to wait
@@ -182,7 +182,7 @@ int main( int argc, char *argv[] ) {
 
     GameThreadParms game_thread_parms;
 
-    SDL_Thread * sdl_game_thread = SDL_CreateThread( game_thread, "game", &game_thread_parms );
+    auto sdl_game_thread = SDL_CreateThread( game_thread, "game", &game_thread_parms );
 
     RenderThreadParms render_thread_parms;
     render_thread_parms.root = ogre_root;
@@ -214,7 +214,7 @@ int main( int argc, char *argv[] ) {
     is.orientation_factor = -1.0f; // look around config
 	while (!shutdown_requested /* && SDL_GetTicks() < MAX_RUN_TIME */) {
 	  // we wait here
-    char * input_pull = NULL;
+    auto input_pull = NULL;
     nn_input_pull.nstr_recv( &input_pull );
 
 	  printf("game push received\n");
@@ -233,7 +233,7 @@ int main( int argc, char *argv[] ) {
             shutdown_requested = true;	    
           }
         } else if ( event.type == SDL_MOUSEMOTION ) {
-          SDL_MouseMotionEvent * mev = (SDL_MouseMotionEvent*)&event;
+          auto mev = (SDL_MouseMotionEvent*)&event;
           // + when manipulating an object, - when doing a first person view .. needs to be configurable?
 
           is.yaw += is.orientation_factor * is.yaw_sens * (float)mev->xrel;
@@ -277,7 +277,7 @@ int main( int argc, char *argv[] ) {
       } else if ( strcmp( input_pull, "kb_state" ) == 0 ) {
         // looking at a few hardcoded keys for now
         // NOTE: I suspect it would be perfectly safe to grab that pointer once, and read it from a different thread?
-        const Uint8 *state = SDL_GetKeyboardState(NULL);
+        const auto state = SDL_GetKeyboardState(NULL);
         nn_input_pub.nstr_send( "input.kb:%d %d %d %d %d %d", state[ SDL_SCANCODE_W ], state[ SDL_SCANCODE_A ], state[ SDL_SCANCODE_S ], state[ SDL_SCANCODE_D ], state[ SDL_SCANCODE_SPACE ], state[ SDL_SCANCODE_LALT ] );
       } else if ( strncmp( input_pull, "mouse_reset", strlen( "mouse_reset" ) ) == 0 ) {
         // reset the orientation
@@ -330,7 +330,7 @@ int main( int argc, char *argv[] ) {
 }
 
 void parse_orientation( char * start, Ogre::Quaternion & orientation ) {
-  char * end = strchr( start, ' ' );
+  auto end = strchr( start, ' ' );
   end[0] = '\0';
   orientation.w = (float)atof( start );
   start = end + 1;

@@ -116,6 +116,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   auto q1 = gs.orientation_history[ q1_index ].o;
   auto q1_t = gs.orientation_history[ q1_index ].t;
   auto omega = 2.0f * ( orientation - q1 ) * q1.UnitInverse() * ( 1000.0f / (float)( now - q1_t ) );
+  omega.normalise();
   omega.ToAngleAxis( gs.smoothed_angular_velocity, gs.smoothed_angular );
   //  printf( "%f %f %f - %f\n", gs.smoothed_angular.x, gs.smoothed_angular.y, gs.smoothed_angular.z, gs.smoothed_angular_velocity.valueDegrees() );
   srs.smoothed_angular = gs.smoothed_angular;
@@ -179,7 +180,7 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
       factor * gs.rotation.x,
       factor * gs.rotation.y,
       factor * gs.rotation.z );
-    srs.orientation = rotation_tick * srs.orientation;
+    srs.orientation = rotation_tick.normalise() * srs.orientation;
   } else {
     // keep updating the orientation in the render state, even while the render thread is ignoring it:
     // when the game thread resumes control of the head orientation, it will interpolate from one of these states,

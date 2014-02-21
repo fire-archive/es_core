@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "game.h"
 
 int game_thread( void * _parms ) {
-  GameThreadParms * parms = (GameThreadParms*)_parms;
+  auto parms = (GameThreadParms*)_parms;
   GameThreadSockets gsockets;
 
   GameState gs;

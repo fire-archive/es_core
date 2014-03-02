@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "game.h"
 
 int game_thread( void * _parms ) {
-  GameThreadParms * parms = (GameThreadParms*)_parms;
+  auto parms = (GameThreadParms*)_parms;
   GameThreadSockets gsockets;
 
   GameState gs;
@@ -58,7 +58,7 @@ int game_thread( void * _parms ) {
   nn::socket nn_control_socket( AF_SP, NN_BUS );
   gsockets.nn_control_socket = &nn_control_socket;
   {
-    int ret = gsockets.nn_control_socket->connect( "tcp://127.0.0.1:60206" ); // control_game
+    auto ret = gsockets.nn_control_socket->connect( "tcp://127.0.0.1:60206" ); // control_game
     assert( ret == 0 );
   }
 
@@ -70,7 +70,7 @@ int game_thread( void * _parms ) {
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 1 );
   gsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-    int ret = gsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
+    auto ret = gsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
     assert ( ret == 0 );
   }
 
@@ -78,24 +78,24 @@ int game_thread( void * _parms ) {
   nn_input_kb_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.kb:", 1 );
   gsockets.nn_input_kb_sub = &nn_input_kb_sub;
   {
-    int ret = gsockets.nn_input_kb_sub->connect( "tcp://127.0.0.1:60208" ); // input
+    auto ret = gsockets.nn_input_kb_sub->connect( "tcp://127.0.0.1:60208" ); // input
     assert ( ret == 0 );
   }
 
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   gsockets.nn_input_push = &nn_input_push;
   {
-    int ret = gsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
+    auto ret = gsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
     assert ( ret == 0 );
   }
 
   game_init( gsockets, gs, srs );
 
-  unsigned int baseline = SDL_GetTicks();
+  auto baseline = SDL_GetTicks();
   unsigned int framenum = 0;
   while ( true ) {
-    unsigned int now = SDL_GetTicks();
-    unsigned int target_frame = ( now - baseline ) / GAME_DELAY;
+    auto now = SDL_GetTicks();
+    auto target_frame = ( now - baseline ) / GAME_DELAY;
     if ( framenum <= target_frame ) {
       framenum++;
       // NOTE: build the state of the world at t = framenum * GAME_DELAY,
@@ -112,10 +112,10 @@ int game_thread( void * _parms ) {
       printf( "game sleep %d ms\n", ahead );
       SDL_Delay( ahead );
     }
-    char * cmd = NULL;
+    char * cmd = nullptr;
     gsockets.nn_control_socket->nstr_recv(&cmd, NN_DONTWAIT);
 
-    if ( cmd != NULL ) {
+    if ( cmd != nullptr ) {
       assert( strcmp( cmd, "stop" ) == 0 );
       nn_freemsg( cmd );
       break;

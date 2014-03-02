@@ -61,13 +61,13 @@ int render_thread( void * _parms ) {
 
   nn::socket nn_control_socket( AF_SP, NN_BUS );
   {
-    int ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
+    auto ret = nn_control_socket.connect( "tcp://127.0.0.1:60207" ); // control_render
     assert( ret == 0 );
   }
 
   nn::socket nn_game_socket( AF_SP, NN_BUS );
   {
-    int ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
+    auto ret = nn_game_socket.connect( "tcp://127.0.0.1:60210" ); // game_render
     // NOTE: since both render thread and game thread get spun at the same time,
     // and the connect needs to happen after the bind,
     // it's possible this would fail on occasion? just loop a few times and retry?
@@ -77,7 +77,7 @@ int render_thread( void * _parms ) {
   nn::socket nn_input_push( AF_SP, NN_PUSH );
   rsockets.nn_input_push = &nn_input_push;
   {
-	int ret = rsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
+	auto ret = rsockets.nn_input_push->connect( "tcp://127.0.0.1:60209" ); // input_pull
     assert ( ret == 0 );
   }
 
@@ -85,7 +85,7 @@ int render_thread( void * _parms ) {
   nn_input_mouse_sub.setsockopt ( NN_SUB, NN_SUB_SUBSCRIBE, "input.mouse:", 0 );
   rsockets.nn_input_mouse_sub = &nn_input_mouse_sub;
   {
-	int ret = rsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
+	auto ret = rsockets.nn_input_mouse_sub->connect( "tcp://127.0.0.1:60208" ); // input
 	  assert(ret == 0);
   }
 
@@ -107,10 +107,10 @@ int render_thread( void * _parms ) {
   render_init( parms, rs, srs[0] );
 
   while ( true ) {
-    char * cmd = NULL;
+    char * cmd = nullptr;
     nn_control_socket.nstr_recv(&cmd, NN_DONTWAIT);
 
-    if ( cmd != NULL ) {
+	if (cmd != nullptr) {
 	  int check = strcmp( cmd, "stop" ) == 0;
       assert( check );
       nn_freemsg( cmd );
@@ -118,10 +118,10 @@ int render_thread( void * _parms ) {
     }
     while ( true ) {
       // any message from the game thread?
-      char * game_tick = NULL;
+	  char * game_tick = nullptr;
       nn_game_socket.nstr_recv(&game_tick, NN_DONTWAIT);
 
-      if ( game_tick == NULL )
+	  if ( game_tick == nullptr )
         break;
 
       srs_index ^= 1;
@@ -135,7 +135,7 @@ int render_thread( void * _parms ) {
       continue;
     }
     unsigned int pre_render_time = SDL_GetTicks();
-    float ratio = (float)( pre_render_time - srs[ srs_index ^ 1 ].game_time ) / (float)( srs[ srs_index ].game_time - srs[ srs_index ^ 1 ].game_time );
+    auto ratio = (float)( pre_render_time - srs[ srs_index ^ 1 ].game_time ) / (float)( srs[ srs_index ].game_time - srs[ srs_index ^ 1 ].game_time );
     printf( "render ratio %f\n", ratio );
 
     interpolate_and_render( rsockets, rs, ratio, srs[ srs_index ^ 1 ], srs[ srs_index ] );
@@ -143,8 +143,8 @@ int render_thread( void * _parms ) {
     parms->root->_fireFrameStarted();
     parms->root->renderOneFrame();
     parms->root->_fireFrameRenderingQueued();
-    if ( parms->gl_context != NULL ) {
-      // glcontext != NULL <=> SDL initialized the GL context and manages the buffer swaps
+    if ( parms->gl_context != nullptr ) {
+      // glcontext != nullptr <=> SDL initialized the GL context and manages the buffer swaps
       SDL_GL_SwapWindow( parms->window );
     }
     parms->root->_fireFrameEnded();
@@ -152,7 +152,7 @@ int render_thread( void * _parms ) {
     // if vsync is off, it's the time it took to render the frame
     // if vsync is on, it's render time + time waiting for the buffer swap
     // NOTE: could display it terms of ratio also?
-    unsigned int post_render_time = SDL_GetTicks();
+    auto post_render_time = SDL_GetTicks();
     printf( "render latency %d ms\n", post_render_time - pre_render_time );
   }
   return 0;

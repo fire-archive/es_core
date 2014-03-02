@@ -40,8 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void parse_mouse_state( char * mouse_state, Ogre::Quaternion & orientation, uint8_t & buttons ) {
   Ogre::Vector3 rotation_vector; // skipped over
-  char * start = mouse_state;
-  char * end = strchr( start, ' ' );
+  auto start = mouse_state;
+  auto end = strchr( start, ' ' );
   end[0] = '\0';
   orientation.w = (float)atof( start );
   start = end + 1;
@@ -69,7 +69,7 @@ void game_init( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   std::uniform_real_distribution<float> rand_speed(1, 60);
   gs.speed = rand_speed(rng) + 40;
   std::uniform_real_distribution<> rand_angle(1, 360);
-  float angle = Ogre::Math::AngleUnitsToRadians(rand_angle(rng));
+  auto angle = Ogre::Math::AngleUnitsToRadians(rand_angle(rng));
   gs.direction = Ogre::Vector2( cosf( angle ), sinf( angle ) );
   rs.orientation = Ogre::Quaternion( Ogre::Radian( 0.0f ), Ogre::Vector3::UNIT_Z );
   rs.position = Ogre::Vector3::ZERO;
@@ -86,11 +86,11 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   // get the latest mouse buttons state and orientation
   gsockets.nn_input_push->nstr_send( "mouse_state" );
   printf( "game mouse_state request pushed\n" );
-  char * tmp = NULL;
+  char * tmp = nullptr;
   gsockets.nn_input_mouse_sub->nstr_recv( &tmp );
-  char * start = tmp;
-  char * end = strchr( start, ':' );
-  char * mouse_state = (char *) malloc( strlen(tmp + 1) );
+  auto start = tmp;
+  auto end = strchr( start, ':' );
+  auto mouse_state = (char *) malloc( strlen(tmp + 1) );
   strcpy(mouse_state, end + 1);
   nn_freemsg( tmp );
 
@@ -107,15 +107,16 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
   gs.orientation_index = ( gs.orientation_index + 1 ) % ORIENTATION_LOG;
 
   // oldest orientation
-  unsigned int q1_index = gs.orientation_index;
+  auto q1_index = gs.orientation_index;
   // NOTE: the problem with using the successive orientations to infer an angular speed,
   // is that if the orientation is changing fast enough, this code will 'flip' the speed around
   // e.g. this doesn't work, need to use the XY mouse data to track angular speed
   // NOTE: uncomment the following line to use the full history, notice the 'flip' happens at much lower speed
   q1_index = ( q1_index + ORIENTATION_LOG - 2 ) % ORIENTATION_LOG; 
-  Ogre::Quaternion q1 = gs.orientation_history[ q1_index ].o;
-  uint32_t q1_t = gs.orientation_history[ q1_index ].t;
-  Ogre::Quaternion omega = 2.0f * ( orientation - q1 ) * q1.UnitInverse() * ( 1000.0f / (float)( now - q1_t ) );
+  auto q1 = gs.orientation_history[ q1_index ].o;
+  auto q1_t = gs.orientation_history[ q1_index ].t;
+  auto omega = 2.0f * ( orientation - q1 ) * q1.UnitInverse() * ( 1000.0f / (float)( now - q1_t ) );
+  omega.normalise();
   omega.ToAngleAxis( gs.smoothed_angular_velocity, gs.smoothed_angular );
   //  printf( "%f %f %f - %f\n", gs.smoothed_angular.x, gs.smoothed_angular.y, gs.smoothed_angular.z, gs.smoothed_angular_velocity.valueDegrees() );
   srs.smoothed_angular = gs.smoothed_angular;
@@ -173,13 +174,13 @@ void game_tick( GameThreadSockets & gsockets, GameState & gs, SharedRenderState 
     if ( gs.rotation_speed.valueDegrees() < 20.f ) {
       gs.rotation_speed = 0.0f;
     }
-    float factor = sinf( 0.5f * Ogre::Degree( gs.rotation_speed * GAME_TICK_FLOAT ).valueRadians() );
+    auto factor = sinf( 0.5f * Ogre::Degree( gs.rotation_speed * GAME_TICK_FLOAT ).valueRadians() );
     Ogre::Quaternion rotation_tick(
       cosf( 0.5f * Ogre::Degree( gs.rotation_speed * GAME_TICK_FLOAT ).valueRadians() ),
       factor * gs.rotation.x,
       factor * gs.rotation.y,
       factor * gs.rotation.z );
-    srs.orientation = rotation_tick * srs.orientation;
+    srs.orientation = rotation_tick.normalise() * srs.orientation;
   } else {
     // keep updating the orientation in the render state, even while the render thread is ignoring it:
     // when the game thread resumes control of the head orientation, it will interpolate from one of these states,

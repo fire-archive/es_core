@@ -123,12 +123,12 @@ int main( int argc, char *argv[] ) {
     auto ogre_root = new Ogre::Root();
 #ifdef __WINDOWS__
 #ifdef _DEBUG
-    ogre_root->loadPlugin( "RenderSystem_GL_d" );
+    ogre_root->loadPlugin( "RenderSystem_GL3Plus_d" );
 #else
-    ogre_root->loadPlugin( "RenderSystem_GL" );
+    ogre_root->loadPlugin( "RenderSystem_GL3Plus" );
 #endif
 #else
-    ogre_root->loadPlugin( "RenderSystem_GL" );
+    ogre_root->loadPlugin( "RenderSystem_GL3Plus" );
 #endif
     if ( ogre_root->getAvailableRenderers().size() != 1 ) {
       OGRE_EXCEPT( Ogre::Exception::ERR_INTERNAL_ERROR, "Failed to initialize RenderSystem_GL", "main" );

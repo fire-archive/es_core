@@ -112,7 +112,8 @@ void render_init( RenderThreadParms * parms, RenderState & rs, SharedRenderState
   mgr.addResourceLocation( "media/models", "FileSystem", "General" );
   mgr.addResourceLocation( "media/materials/scripts", "FileSystem", "General" );
   mgr.addResourceLocation( "media/materials/textures", "FileSystem", "General" );
-  mgr.addResourceLocation( "media/materials/programs", "FileSystem", "General" );
+  mgr.addResourceLocation( "media/materials/programs/GLSL150", "FileSystem", "General" );
+  mgr.addResourceLocation( "media/materials/programs/GLSL400", "FileSystem", "General" );
 
   mgr.initialiseAllResourceGroups();
     

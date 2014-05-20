@@ -2,7 +2,6 @@
 
 Written by Timothee Besset.
 
-es_core: an experimental framework for low latency, high fps multiplayer games.
 https://github.com/TTimo/es_core
 
 The current state of competitive, skilled FPS games is a topic that comes up often in discussions among my game industry friends, with players and with anyone involved with eSports.
